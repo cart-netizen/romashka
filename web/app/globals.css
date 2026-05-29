@@ -1,25 +1,58 @@
 @import "tailwindcss";
 
 /*
- * Дизайн-токены ООО «Ромашка» (каркас Фазы 0).
- * Палитра — IMPLEMENTATION_PLAN.md §3. Полная дизайн-система и шрифты
- * (Playfair Display / Montserrat через next/font) подключаются в Фазе 2;
- * переменные --font-* пока имеют системный фолбэк.
+ * Дизайн-система ООО «Ромашка» (Фаза 2).
+ * Палитра/типографика — IMPLEMENTATION_PLAN.md §3, направление — референс
+ * (структура и стилистика, без копирования контента).
  */
 @theme {
-  --color-cream: #f5f0e8;
-  --color-ink: #221e1a;
-  --color-burgundy: #532529;
-  --color-terracotta: #9e5a33;
-  --color-muted: #8c8279;
+  /* Палитра */
+  --color-cream: #f5f0e8; /* основной фон */
+  --color-surface: #fcfaf6; /* карточки, панели */
+  --color-ink: #221e1a; /* основной текст */
+  --color-burgundy: #532529; /* акцент, баннеры, верх футера */
+  --color-terracotta: #9e5a33; /* вторичный акцент, баннер доставки */
+  --color-cta: #b85c38; /* основная кнопка-CTA (ярче терракоты) */
+  --color-cta-hover: #a04e2e;
+  --color-muted: #8c8279; /* вторичный текст */
+  --color-line: #e3d9ca; /* тонкие линии, границы */
 
+  /* Шрифты */
   --font-serif: var(--font-playfair-display), Georgia, "Times New Roman", serif;
   --font-sans:
     var(--font-montserrat), system-ui, -apple-system, "Segoe UI", sans-serif;
+
+  /* Скругления / тени */
+  --radius-card: 2px;
+  --shadow-soft: 0 1px 2px rgba(34, 30, 26, 0.04), 0 8px 24px rgba(34, 30, 26, 0.06);
 }
 
 body {
   background-color: var(--color-cream);
   color: var(--color-ink);
   font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+/* Заголовки — серифом по умолчанию */
+h1,
+h2,
+h3 {
+  font-family: var(--font-serif);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--color-ink);
+}
+
+/* Плавная прокрутка к якорям (отзывы и т.п.) */
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+}
+
+/* Тонкая полоса прокрутки в выпадающих панелях */
+.scrollbar-thin {
+  scrollbar-width: thin;
 }
