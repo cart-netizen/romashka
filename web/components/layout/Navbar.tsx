@@ -8,6 +8,7 @@ import { cn } from "@/lib/cn";
 import type { NavCategory } from "./nav.types";
 import { MegaMenu } from "./MegaMenu";
 import { MobileMenu } from "./MobileMenu";
+import { SearchOverlay } from "./SearchOverlay";
 
 function Logo() {
   return (
@@ -24,6 +25,7 @@ function Logo() {
 export function Navbar({ nav }: { nav: NavCategory[] }) {
   const [activeId, setActiveId] = useState<number | null>(null);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const active = nav.find((c) => c.id === activeId) ?? null;
 
   return (
@@ -68,9 +70,14 @@ export function Navbar({ nav }: { nav: NavCategory[] }) {
             </nav>
 
             <div className="flex items-center gap-4 text-ink">
-              <Link href="/catalog" aria-label="Поиск по каталогу" className="hover:text-terracotta">
+              <button
+                type="button"
+                aria-label="Поиск по каталогу"
+                onClick={() => setSearchOpen(true)}
+                className="hover:text-terracotta"
+              >
                 <SearchIcon />
-              </Link>
+              </button>
               <Link href="/cabinet/login" aria-label="Кабинет дизайнера" className="hover:text-terracotta">
                 <UserIcon />
               </Link>
@@ -94,6 +101,7 @@ export function Navbar({ nav }: { nav: NavCategory[] }) {
       )}
 
       <MobileMenu nav={nav} open={mobileOpen} onClose={() => setMobileOpen(false)} />
+      <SearchOverlay open={searchOpen} onClose={() => setSearchOpen(false)} />
     </>
   );
 }

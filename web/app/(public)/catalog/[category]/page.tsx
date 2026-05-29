@@ -1,12 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { ProductGrid } from "@/components/catalog/ProductGrid";
 import { SubcategoryChips } from "@/components/catalog/SubcategoryChips";
-import { getCategories, getCategoryBySlug, getProducts, getSubcategories } from "@/lib/directus";
-
-export const revalidate = 120;
+import { CatalogView } from "@/components/catalog/CatalogView";
+import { getCatalog, getCategories, getCategoryBySlug, getCatalogFacets, getSubcategories } from "@/lib/directus";
+import { parseCatalogParams, type RawParams } from "@/lib/catalog-params";
 
 export async function generateStaticParams() {
   const categories = await getCategories();
@@ -24,14 +22,24 @@ export async function generateMetadata({
   return { title: cat.name, description: cat.description ?? `Каталог: ${cat.name}.` };
 }
 
-export default async function CategoryPage({ params }: { params: Promise<{ category: string }> }) {
+export default async function CategoryPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ category: string }>;
+  searchParams: Promise<RawParams>;
+}) {
   const { category } = await params;
   const cat = await getCategoryBySlug(category);
   if (!cat) notFound();
 
-  const [subcategories, products] = await Promise.all([
+  const uiQuery = parseCatalogParams(await searchParams);
+  const dataQuery = { ...uiQuery, category };
+
+  const [{ items, total }, facets, subcategories] = await Promise.all([
+    getCatalog(dataQuery),
+    getCatalogFacets(category),
     getSubcategories(category),
-    getProducts({ categorySlug: category, limit: -1 }),
   ]);
 
   return (
@@ -43,11 +51,7 @@ export default async function CategoryPage({ params }: { params: Promise<{ categ
       >
         <SubcategoryChips categorySlug={category} subcategories={subcategories} />
       </PageHeader>
-
-      <Container className="py-12">
-        <p className="mb-6 text-sm text-muted">Найдено товаров: {products.length}</p>
-        <ProductGrid products={products} />
-      </Container>
+      <CatalogView basePath={`/catalog/${category}`} query={uiQuery} facets={facets} items={items} total={total} />
     </>
   );
 }

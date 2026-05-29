@@ -1,13 +1,11 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
-import { ProductGrid } from "@/components/catalog/ProductGrid";
 import { SubcategoryChips } from "@/components/catalog/SubcategoryChips";
+import { CatalogView } from "@/components/catalog/CatalogView";
 import type { Category } from "@/lib/directus.types";
-import { getProducts, getSubcategories, getSubcategoryBySlug } from "@/lib/directus";
-
-export const revalidate = 120;
+import { getCatalog, getCatalogFacets, getSubcategories, getSubcategoryBySlug } from "@/lib/directus";
+import { parseCatalogParams, type RawParams } from "@/lib/catalog-params";
 
 export async function generateMetadata({
   params,
@@ -22,18 +20,23 @@ export async function generateMetadata({
 
 export default async function SubcategoryPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ category: string; subcategory: string }>;
+  searchParams: Promise<RawParams>;
 }) {
   const { category, subcategory } = await params;
   const sub = await getSubcategoryBySlug(category, subcategory);
   if (!sub) notFound();
 
   const parent = typeof sub.category === "object" ? (sub.category as Category) : null;
+  const uiQuery = parseCatalogParams(await searchParams);
+  const dataQuery = { ...uiQuery, category, subcategory };
 
-  const [subcategories, products] = await Promise.all([
+  const [{ items, total }, facets, subcategories] = await Promise.all([
+    getCatalog(dataQuery),
+    getCatalogFacets(category),
     getSubcategories(category),
-    getProducts({ subcategorySlug: subcategory, limit: -1 }),
   ]);
 
   return (
@@ -49,11 +52,13 @@ export default async function SubcategoryPage({
       >
         <SubcategoryChips categorySlug={category} subcategories={subcategories} activeSlug={subcategory} />
       </PageHeader>
-
-      <Container className="py-12">
-        <p className="mb-6 text-sm text-muted">Найдено товаров: {products.length}</p>
-        <ProductGrid products={products} />
-      </Container>
+      <CatalogView
+        basePath={`/catalog/${category}/${subcategory}`}
+        query={uiQuery}
+        facets={facets}
+        items={items}
+        total={total}
+      />
     </>
   );
 }

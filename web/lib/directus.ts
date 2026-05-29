@@ -1,6 +1,7 @@
 import "server-only";
 import type {
   Category,
+  Color,
   Factory,
   MenuPromo,
   Product,
@@ -8,6 +9,7 @@ import type {
   SiteSettings,
   Subcategory,
 } from "./directus.types";
+import { type CatalogQuery, PAGE_SIZE } from "./catalog-params";
 
 const DIRECTUS_URL = (process.env.DIRECTUS_URL ?? "http://localhost:8055").replace(/\/$/, "");
 // Базовый URL для ассетов в браузере (next/image оптимизатор тоже использует его).
@@ -52,6 +54,24 @@ async function dGet<T>(
   }
   const json = await res.json();
   return json.data as T;
+}
+
+async function dGetMeta<T>(
+  collectionPath: string,
+  params: Record<string, QueryValue> = {},
+  opts: FetchOpts = {},
+): Promise<{ data: T; total: number }> {
+  const url = `${DIRECTUS_URL}${collectionPath}${buildQuery({ ...params, meta: "filter_count" })}`;
+  const res = await fetch(url, {
+    headers: { Accept: "application/json" },
+    next: { revalidate: opts.revalidate ?? DEFAULT_REVALIDATE, tags: opts.tags },
+  });
+  if (!res.ok) {
+    const body = await res.text();
+    throw new Error(`Directus ${collectionPath} → ${res.status}: ${body.slice(0, 200)}`);
+  }
+  const json = await res.json();
+  return { data: json.data as T, total: json.meta?.filter_count ?? (json.data as unknown[]).length };
 }
 
 /** URL ассета Directus с трансформациями. Безопасно для серверных и клиентских компонентов. */
@@ -167,6 +187,14 @@ export async function getCategoryBySlug(slug: string): Promise<Category | null> 
   return rows[0] ?? null;
 }
 
+export async function getColors(): Promise<Color[]> {
+  return dGet<Color[]>(
+    "/items/colors",
+    { fields: "id,name,hex,sort", sort: "sort", limit: -1 },
+    { tags: ["colors"] },
+  );
+}
+
 export async function getSubcategories(categorySlug: string): Promise<Subcategory[]> {
   return dGet<Subcategory[]>(
     "/items/subcategories",
@@ -230,6 +258,92 @@ export async function getProducts(q: ProductQuery = {}): Promise<Product[]> {
     },
     { tags: ["products"] },
   );
+}
+
+// Каталог с фильтрами/сортировкой/пагинацией + общее число (для пагинации).
+const SORT_MAP: Record<CatalogQuery["sort"], string> = {
+  default: "sort",
+  price_asc: "price_from",
+  price_desc: "-price_from",
+  new: "-id",
+};
+
+export async function getCatalog(q: CatalogQuery): Promise<{ items: Product[]; total: number }> {
+  const and: Record<string, unknown>[] = [{ status: { _eq: "published" } }];
+  if (q.category) and.push({ category: { slug: { _eq: q.category } } });
+  if (q.subcategory) and.push({ subcategory: { slug: { _eq: q.subcategory } } });
+  if (q.inStock) and.push({ in_stock: { _eq: true } });
+  if (q.factories.length) and.push({ factory: { slug: { _in: q.factories } } });
+  if (q.frame.length) and.push({ frame: { _in: q.frame } });
+  if (q.upholstery.length) and.push({ _or: q.upholstery.map((v) => ({ upholstery: { _contains: v } })) });
+  if (q.colors.length) and.push({ colors: { colors_id: { id: { _in: q.colors } } } });
+  if (q.priceMin != null) and.push({ price_from: { _gte: q.priceMin } });
+  if (q.priceMax != null) and.push({ price_from: { _lte: q.priceMax } });
+  if (q.widthMin != null) and.push({ width_cm: { _gte: q.widthMin } });
+  if (q.widthMax != null) and.push({ width_cm: { _lte: q.widthMax } });
+  if (q.heightMin != null) and.push({ height_cm: { _gte: q.heightMin } });
+  if (q.heightMax != null) and.push({ height_cm: { _lte: q.heightMax } });
+  if (q.depthMin != null) and.push({ depth_cm: { _gte: q.depthMin } });
+  if (q.depthMax != null) and.push({ depth_cm: { _lte: q.depthMax } });
+
+  const params: Record<string, QueryValue> = {
+    fields: PRODUCT_CARD_FIELDS,
+    filter: { _and: and },
+    sort: SORT_MAP[q.sort],
+    limit: PAGE_SIZE,
+    page: q.page,
+  };
+  if (q.q) params.search = q.q;
+
+  const { data, total } = await dGetMeta<Product[]>("/items/products", params, { tags: ["products"] });
+  return { items: data, total };
+}
+
+export interface CatalogFacets {
+  factories: Factory[];
+  colors: Color[];
+  subcategories: Subcategory[];
+  categories: Category[];
+  priceMin: number;
+  priceMax: number;
+  widthMax: number;
+  heightMax: number;
+  depthMax: number;
+}
+
+export async function getCatalogFacets(categorySlug?: string): Promise<CatalogFacets> {
+  const aggFilter: Record<string, unknown> = { status: { _eq: "published" } };
+  if (categorySlug) aggFilter.category = { slug: { _eq: categorySlug } };
+
+  const [factories, colors, categories, subcategories, agg] = await Promise.all([
+    getFactories(),
+    getColors(),
+    getCategories(),
+    categorySlug ? getSubcategories(categorySlug) : Promise.resolve([] as Subcategory[]),
+    dGet<{ min: Record<string, number>; max: Record<string, number> }[]>(
+      "/items/products",
+      {
+        filter: aggFilter,
+        "aggregate[min]": "price_from",
+        "aggregate[max]": "price_from,width_cm,height_cm,depth_cm",
+      },
+      { tags: ["products"] },
+    ),
+  ]);
+
+  const min = agg[0]?.min ?? {};
+  const max = agg[0]?.max ?? {};
+  return {
+    factories,
+    colors,
+    categories,
+    subcategories,
+    priceMin: Math.floor(min.price_from ?? 0),
+    priceMax: Math.ceil(max.price_from ?? 0),
+    widthMax: Math.ceil(max.width_cm ?? 0),
+    heightMax: Math.ceil(max.height_cm ?? 0),
+    depthMax: Math.ceil(max.depth_cm ?? 0),
+  };
 }
 
 export async function getProductBySlug(slug: string): Promise<Product | null> {
