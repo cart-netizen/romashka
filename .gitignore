@@ -22,6 +22,9 @@ cms/.env
 cms/data/
 cms/uploads/
 
+# --- Directus extensions (устанавливаются из Marketplace в рантайме) ---
+cms/extensions/
+
 # --- Logs ---
 *.log
 npm-debug.log*

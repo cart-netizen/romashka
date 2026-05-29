@@ -1,0 +1,15 @@
+{
+  "name": "cms-bootstrap",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Скрипты инициализации Directus (схема, доступ, сиды) для проекта «Ромашка».",
+  "scripts": {
+    "schema": "node --env-file=.env scripts/schema.mjs",
+    "access": "node --env-file=.env scripts/access.mjs",
+    "presets": "node --env-file=.env scripts/presets.mjs",
+    "seed": "node --env-file=.env scripts/seed.mjs",
+    "bootstrap": "npm run schema && npm run access && npm run presets && npm run seed",
+    "snapshot": "docker compose exec -T directus npx directus schema snapshot --yes /directus/snapshot/snapshot.yaml"
+  }
+}
