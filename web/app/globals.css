@@ -1,0 +1,25 @@
+@import "tailwindcss";
+
+/*
+ * Дизайн-токены ООО «Ромашка» (каркас Фазы 0).
+ * Палитра — IMPLEMENTATION_PLAN.md §3. Полная дизайн-система и шрифты
+ * (Playfair Display / Montserrat через next/font) подключаются в Фазе 2;
+ * переменные --font-* пока имеют системный фолбэк.
+ */
+@theme {
+  --color-cream: #f5f0e8;
+  --color-ink: #221e1a;
+  --color-burgundy: #532529;
+  --color-terracotta: #9e5a33;
+  --color-muted: #8c8279;
+
+  --font-serif: var(--font-playfair-display), Georgia, "Times New Roman", serif;
+  --font-sans:
+    var(--font-montserrat), system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+body {
+  background-color: var(--color-cream);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
