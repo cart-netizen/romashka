@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Montserrat } from "next/font/google";
 import "./globals.css";
+import { CookieBanner } from "@/components/CookieBanner";
 
 const playfair = Playfair_Display({
   variable: "--font-playfair-display",
@@ -33,7 +34,10 @@ export default function RootLayout({
       lang="ru"
       className={`${playfair.variable} ${montserrat.variable} h-full antialiased`}
     >
-      <body className="flex min-h-full flex-col">{children}</body>
+      <body className="flex min-h-full flex-col">
+        {children}
+        <CookieBanner />
+      </body>
     </html>
   );
 }

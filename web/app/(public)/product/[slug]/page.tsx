@@ -188,10 +188,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
             <div className="mt-6">
               <ProductPurchasePanel
+                productId={product.id}
                 productName={product.name}
                 sizes={sizes}
                 leadTimeNote={leadTimeNote}
-                phone={settings.phone}
                 messengerLink={settings.messenger_max_link}
               />
             </div>

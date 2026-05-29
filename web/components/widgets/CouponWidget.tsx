@@ -7,10 +7,44 @@ import { ConsentCheckbox } from "@/components/ui/ConsentCheckbox";
 import { CloseIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 
+type Status = "idle" | "submitting" | "success" | "error";
+
 export function CouponWidget({ image, promoAmount }: { image: string | null; promoAmount: number | null }) {
   const [open, setOpen] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [status, setStatus] = useState<Status>("idle");
+  const [result, setResult] = useState<{ code: string | null; error?: string } | null>(null);
   const amount = new Intl.NumberFormat("ru-RU").format(promoAmount ?? 5000);
+
+  const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    const fd = new FormData(e.currentTarget);
+    const payload = {
+      contact: String(fd.get("contact") || ""),
+      consent: fd.get("consent") === "on",
+      company: String(fd.get("company") || ""),
+      source_page: typeof window !== "undefined" ? window.location.pathname : "",
+    };
+    if (!payload.contact || !payload.consent) {
+      setStatus("error");
+      setResult({ code: null, error: "Укажите контакт и согласие" });
+      return;
+    }
+    setStatus("submitting");
+    try {
+      const res = await fetch("/api/subscribe", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const json = await res.json();
+      if (!res.ok || !json.ok) throw new Error(json.error || "Ошибка");
+      setStatus("success");
+      setResult({ code: json.code ?? null });
+    } catch (err) {
+      setStatus("error");
+      setResult({ code: null, error: (err as Error).message });
+    }
+  };
 
   return (
     <>
@@ -61,30 +95,39 @@ export function CouponWidget({ image, promoAmount }: { image: string | null; pro
               <span className="text-ink">{amount} ₽</span> на первый заказ.
             </p>
 
-            <form
-              className="mt-4 space-y-3"
-              onSubmit={(e) => {
-                e.preventDefault();
-                setNotice("Спасибо! Отправка подписки и выдача промокода подключаются на следующем этапе.");
-              }}
-            >
-              <input
-                type="text"
-                name="contact"
-                required
-                placeholder="E-mail или телефон"
-                className="w-full rounded-[var(--radius-card)] border border-line bg-cream px-4 py-2.5 text-ink placeholder:text-muted/70 focus:border-ink focus:outline-none"
-              />
-              <ConsentCheckbox />
-              {notice && (
-                <p className="rounded-[var(--radius-card)] border border-terracotta/30 bg-terracotta/10 px-3 py-2 text-xs text-ink">
-                  {notice}
-                </p>
-              )}
-              <Button type="submit" fullWidth>
-                Подписаться
-              </Button>
-            </form>
+            {status === "success" ? (
+              <div className="mt-4 rounded-[var(--radius-card)] border border-terracotta/30 bg-terracotta/10 p-4 text-center">
+                <p className="font-serif text-lg text-ink">Спасибо за подписку!</p>
+                {result?.code ? (
+                  <>
+                    <p className="mt-2 text-sm text-muted">Ваш промокод на {amount} ₽:</p>
+                    <p className="mt-1 font-serif text-2xl tracking-wider text-terracotta">{result.code}</p>
+                    <p className="mt-2 text-xs text-muted">Назовите его при обращении в салон.</p>
+                  </>
+                ) : (
+                  <p className="mt-2 text-sm text-muted">Мы свяжемся с вами и пришлём купон.</p>
+                )}
+              </div>
+            ) : (
+              <form className="mt-4 space-y-3" onSubmit={onSubmit}>
+                <input
+                  type="text"
+                  name="contact"
+                  required
+                  placeholder="E-mail или телефон"
+                  className="w-full rounded-[var(--radius-card)] border border-line bg-cream px-4 py-2.5 text-ink placeholder:text-muted/70 focus:border-ink focus:outline-none"
+                />
+                {/* honeypot */}
+                <div className="hidden" aria-hidden="true">
+                  <input name="company" tabIndex={-1} autoComplete="off" />
+                </div>
+                <ConsentCheckbox />
+                {status === "error" && result?.error && <p className="text-xs text-cta">{result.error}</p>}
+                <Button type="submit" fullWidth disabled={status === "submitting"}>
+                  {status === "submitting" ? "Отправка…" : "Подписаться"}
+                </Button>
+              </form>
+            )}
           </div>
         </div>
       </div>

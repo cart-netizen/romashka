@@ -1,31 +1,25 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { Button, ButtonLink } from "@/components/ui/Button";
-import { Modal } from "@/components/ui/Modal";
-import { PhoneIcon } from "@/components/ui/icons";
+import { LeadFormModal } from "@/components/forms/LeadFormModal";
 import { cn } from "@/lib/cn";
 
-export interface PanelSize {
-  label: string;
-}
-
 export function ProductPurchasePanel({
+  productId,
   productName,
   sizes,
   leadTimeNote,
-  phone,
   messengerLink,
 }: {
+  productId: number;
   productName: string;
   sizes: string[];
   leadTimeNote: string | null;
-  phone: string | null;
   messengerLink: string | null;
 }) {
   const [selected, setSelected] = useState(0);
-  const [open, setOpen] = useState(false);
+  const [modal, setModal] = useState<null | "price_request" | "callback">(null);
   const selectedSize = sizes[selected];
 
   return (
@@ -51,43 +45,31 @@ export function ProductPurchasePanel({
         </div>
       )}
 
-      <Button size="lg" fullWidth onClick={() => setOpen(true)}>
+      <Button size="lg" fullWidth onClick={() => setModal("price_request")}>
         Узнать цену
       </Button>
 
+      <div className="flex flex-wrap gap-3">
+        <Button variant="outline" size="md" className="flex-1" onClick={() => setModal("callback")}>
+          Заказать звонок
+        </Button>
+        {messengerLink && (
+          <ButtonLink href={messengerLink} variant="burgundy" size="md" className="flex-1" target="_blank" rel="noopener noreferrer">
+            Написать в MAX
+          </ButtonLink>
+        )}
+      </div>
+
       {leadTimeNote && <p className="text-sm text-muted">{leadTimeNote}</p>}
 
-      <Modal open={open} onClose={() => setOpen(false)} title="Узнать цену">
-        <p className="text-sm text-muted">
-          {productName}
-          {selectedSize ? ` · ${selectedSize}` : ""}
-        </p>
-        <p className="mt-4 text-sm text-ink/90">
-          Свяжитесь с салоном — менеджер назовёт актуальную стоимость, поможет с выбором обивки и размера.
-        </p>
-        <div className="mt-6 space-y-3">
-          {phone && (
-            <ButtonLink href={`tel:${phone.replace(/[^+\d]/g, "")}`} fullWidth size="lg">
-              <PhoneIcon className="h-5 w-5" /> Позвонить {phone}
-            </ButtonLink>
-          )}
-          {messengerLink && (
-            <ButtonLink href={messengerLink} variant="burgundy" fullWidth size="lg" target="_blank" rel="noopener noreferrer">
-              Написать в MAX
-            </ButtonLink>
-          )}
-          <ButtonLink href="/contacts" variant="outline" fullWidth size="lg">
-            Контакты и адрес салона
-          </ButtonLink>
-        </div>
-        <p className="mt-4 text-xs text-muted">
-          Онлайн-заявка с формой появится здесь же. Пока — свяжитесь удобным способом или загляните в{" "}
-          <Link href="/contacts" className="underline underline-offset-2">
-            салон
-          </Link>
-          .
-        </p>
-      </Modal>
+      <LeadFormModal
+        open={modal !== null}
+        onClose={() => setModal(null)}
+        type={modal ?? "price_request"}
+        product={productId}
+        productName={productName}
+        selectedSize={modal === "price_request" ? selectedSize : undefined}
+      />
     </div>
   );
 }

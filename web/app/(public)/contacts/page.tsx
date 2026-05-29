@@ -3,6 +3,7 @@ import { Container } from "@/components/ui/Container";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { ButtonLink } from "@/components/ui/Button";
 import { ClockIcon, MailIcon, MapPinIcon, PhoneIcon } from "@/components/ui/icons";
+import { LeadForm } from "@/components/forms/LeadForm";
 import { getSiteSettings } from "@/lib/directus";
 
 export const revalidate = 300;
@@ -87,6 +88,15 @@ export default async function ContactsPage() {
                 Карта проезда появится после заполнения настроек салона.
               </div>
             )}
+          </div>
+        </div>
+
+        <div className="mt-14 max-w-xl">
+          <h2 className="text-2xl">Оставьте заявку</h2>
+          <span className="mt-3 block h-px w-12 bg-terracotta" />
+          <p className="mt-4 text-muted">Напишите нам — перезвоним, проконсультируем и поможем с подбором.</p>
+          <div className="mt-6">
+            <LeadForm type="contact" />
           </div>
         </div>
       </Container>
