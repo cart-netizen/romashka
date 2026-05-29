@@ -402,6 +402,66 @@ export async function getUspMessages(): Promise<UspMessage[]> {
   );
 }
 
+// ── Shop the look (интерактивные сцены) ──────────────────────────────────────
+
+export interface SceneHotspot {
+  id: number;
+  pos_x: number;
+  pos_y: number;
+  product: { name: string; slug: string; price_from: number | null } | null;
+}
+
+export interface ShowcaseScene {
+  id: number;
+  title: string;
+  image: string | null;
+  hotspots: SceneHotspot[];
+}
+
+export async function getShowcaseScenes(): Promise<ShowcaseScene[]> {
+  const [scenes, hotspots] = await Promise.all([
+    dGet<{ id: number; title: string; image: string | null }[]>(
+      "/items/showcase_scenes",
+      { fields: "id,title,image,sort", filter: PUBLISHED, sort: "sort", limit: 5 },
+      { tags: ["showcase"] },
+    ),
+    dGet<
+      {
+        id: number;
+        scene: number;
+        pos_x: number;
+        pos_y: number;
+        product: { name: string; slug: string; price_from: number | null; status: string } | null;
+      }[]
+    >(
+      "/items/showcase_hotspots",
+      {
+        fields: "id,scene,pos_x,pos_y,sort,product.name,product.slug,product.price_from,product.status",
+        filter: { product: { status: { _eq: "published" } } },
+        sort: "sort",
+        limit: -1,
+      },
+      { tags: ["showcase"] },
+    ),
+  ]);
+
+  return scenes.map((s) => ({
+    id: s.id,
+    title: s.title,
+    image: s.image,
+    hotspots: hotspots
+      .filter((h) => h.scene === s.id && h.product)
+      .map((h) => ({
+        id: h.id,
+        pos_x: Number(h.pos_x),
+        pos_y: Number(h.pos_y),
+        product: h.product
+          ? { name: h.product.name, slug: h.product.slug, price_from: h.product.price_from }
+          : null,
+      })),
+  }));
+}
+
 // ── Фабрики ─────────────────────────────────────────────────────────────────
 
 export async function getFactories(): Promise<Factory[]> {

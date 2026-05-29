@@ -118,6 +118,12 @@ export const ToolIcon = (p: IconProps) => (
   </Svg>
 );
 
+export const ChatIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M21 12a8 8 0 0 1-11.5 7.2L4 20l.9-5A8 8 0 1 1 21 12Z" />
+  </Svg>
+);
+
 export const StoreIcon = (p: IconProps) => (
   <Svg {...p}>
     <path d="M4 9 5 4h14l1 5M4 9h16M4 9v11h16V9M9 20v-6h6v6" />
