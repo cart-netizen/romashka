@@ -3,8 +3,9 @@ import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SubcategoryChips } from "@/components/catalog/SubcategoryChips";
 import { CatalogView } from "@/components/catalog/CatalogView";
-import { getCatalog, getCategories, getCategoryBySlug, getCatalogFacets, getSubcategories } from "@/lib/directus";
+import { assetUrl, getCatalog, getCategories, getCategoryBySlug, getCatalogFacets, getSubcategories } from "@/lib/directus";
 import { parseCatalogParams, type RawParams } from "@/lib/catalog-params";
+import { JsonLd, breadcrumbJsonLd } from "@/lib/seo";
 
 export async function generateStaticParams() {
   const categories = await getCategories();
@@ -19,7 +20,14 @@ export async function generateMetadata({
   const { category } = await params;
   const cat = await getCategoryBySlug(category);
   if (!cat) return {};
-  return { title: cat.name, description: cat.description ?? `Каталог: ${cat.name}.` };
+  const og = assetUrl(cat.hero_image, { width: 1200, height: 630, fit: "cover" });
+  const description = cat.description ?? `Каталог: ${cat.name}.`;
+  return {
+    title: cat.name,
+    description,
+    alternates: { canonical: `/catalog/${category}` },
+    openGraph: { title: cat.name, description, url: `/catalog/${category}`, ...(og ? { images: [og] } : {}) },
+  };
 }
 
 export default async function CategoryPage({
@@ -44,6 +52,13 @@ export default async function CategoryPage({
 
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Главная", url: "/" },
+          { name: "Каталог", url: "/catalog" },
+          { name: cat.name, url: `/catalog/${category}` },
+        ])}
+      />
       <PageHeader
         crumbs={[{ label: "Главная", href: "/" }, { label: "Каталог", href: "/catalog" }, { label: cat.name }]}
         title={cat.name}

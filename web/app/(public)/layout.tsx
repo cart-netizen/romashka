@@ -3,6 +3,7 @@ import { Footer } from "@/components/layout/Footer";
 import { MessengerFab } from "@/components/widgets/MessengerFab";
 import { CouponWidget } from "@/components/widgets/CouponWidget";
 import { assetUrl, getCategories, getSiteSettings } from "@/lib/directus";
+import { JsonLd, organizationJsonLd, websiteJsonLd } from "@/lib/seo";
 
 export default async function PublicLayout({ children }: { children: React.ReactNode }) {
   const [settings, categories] = await Promise.all([getSiteSettings(), getCategories()]);
@@ -14,6 +15,8 @@ export default async function PublicLayout({ children }: { children: React.React
 
   return (
     <>
+      <JsonLd data={organizationJsonLd(settings)} />
+      <JsonLd data={websiteJsonLd()} />
       <Header />
       <main className="flex-1">{children}</main>
       <Footer />

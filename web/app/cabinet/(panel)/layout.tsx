@@ -1,7 +1,12 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { logoutAction } from "@/lib/auth-actions";
 import { getMe } from "@/lib/cabinet";
+
+export const metadata: Metadata = {
+  robots: { index: false, follow: false },
+};
 
 const NAV = [
   { href: "/cabinet", label: "Дашборд" },

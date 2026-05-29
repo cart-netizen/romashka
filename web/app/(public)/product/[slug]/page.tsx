@@ -24,6 +24,7 @@ import {
 } from "@/lib/directus";
 import type { Category, Subcategory } from "@/lib/directus.types";
 import { formatPriceFrom, reviewsLabel } from "@/lib/format";
+import { JsonLd, breadcrumbJsonLd, productJsonLd } from "@/lib/seo";
 import {
   productColors,
   productDimensionIds,
@@ -43,9 +44,18 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const product = await getProductBySlug(slug);
   if (!product) return {};
+  const og = assetUrl(product.main_image, { width: 1200, height: 630, fit: "cover" });
+  const description = product.short_description ?? `${product.name} — премиальная мебель в салоне «Ромашка».`;
   return {
     title: product.name,
-    description: product.short_description ?? `${product.name} — премиальная мебель в салоне «Ромашка».`,
+    description,
+    alternates: { canonical: `/product/${product.slug}` },
+    openGraph: {
+      title: product.name,
+      description,
+      url: `/product/${product.slug}`,
+      ...(og ? { images: [{ url: og, width: 1200, height: 630 }] } : {}),
+    },
   };
 }
 
@@ -124,20 +134,34 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     });
   }
 
+  const crumbs = [
+    { label: "Главная", href: "/" },
+    { label: "Каталог", href: "/catalog" },
+    ...(category ? [{ label: category.name, href: `/catalog/${category.slug}` }] : []),
+    ...(category && subcategory
+      ? [{ label: subcategory.name, href: `/catalog/${category.slug}/${subcategory.slug}` }]
+      : []),
+    { label: product.name },
+  ];
+
   return (
     <>
+      <JsonLd
+        data={productJsonLd({
+          name: product.name,
+          slug: product.slug,
+          sku: product.sku,
+          description: product.short_description,
+          image: galleryUrls[0],
+          priceFrom: product.price_from,
+          inStock: product.in_stock,
+          brand: factory?.name,
+          rating: ratings.length ? { value: average, count: reviews.length } : null,
+        })}
+      />
+      <JsonLd data={breadcrumbJsonLd(crumbs.map((c) => ({ name: c.label, url: c.href })))} />
       <Container className="py-8">
-        <Breadcrumbs
-          items={[
-            { label: "Главная", href: "/" },
-            { label: "Каталог", href: "/catalog" },
-            ...(category ? [{ label: category.name, href: `/catalog/${category.slug}` }] : []),
-            ...(category && subcategory
-              ? [{ label: subcategory.name, href: `/catalog/${category.slug}/${subcategory.slug}` }]
-              : []),
-            { label: product.name },
-          ]}
-        />
+        <Breadcrumbs items={crumbs} />
 
         <div className="mt-8 grid gap-10 lg:grid-cols-2">
           <ProductGallery images={galleryUrls} alt={product.name} />

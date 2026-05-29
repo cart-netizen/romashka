@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { Container } from "@/components/ui/Container";
@@ -16,6 +17,16 @@ import {
 } from "@/lib/directus";
 
 export const revalidate = 120;
+
+export const metadata: Metadata = {
+  description:
+    "Премиальная мебель в Барнауле: диваны, кровати, кресла, тумбочки от фабрик-партнёров. Подбор, доставка и сборка по Сибири. Цена «от ___ ₽».",
+  alternates: { canonical: "/" },
+  openGraph: {
+    url: "/",
+    title: "Мебельный салон «Ромашка» — премиальная мебель в Барнауле",
+  },
+};
 
 export default async function HomePage() {
   const [settings, categories, scenesRaw, bestsellers, newest, latest, factories] = await Promise.all([

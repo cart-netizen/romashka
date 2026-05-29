@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ProductGrid } from "@/components/catalog/ProductGrid";
 import { assetUrl, getFactories, getFactoryBySlug, getProducts } from "@/lib/directus";
+import { JsonLd, breadcrumbJsonLd } from "@/lib/seo";
 
 export const revalidate = 300;
 
@@ -18,7 +19,14 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   const { slug } = await params;
   const factory = await getFactoryBySlug(slug);
   if (!factory) return {};
-  return { title: factory.name, description: `Ассортимент фабрики ${factory.name} в салоне «Ромашка».` };
+  const og = assetUrl(factory.logo, { width: 1200, height: 630, fit: "cover" });
+  const description = `Ассортимент фабрики ${factory.name} в салоне «Ромашка».`;
+  return {
+    title: factory.name,
+    description,
+    alternates: { canonical: `/factories/${slug}` },
+    openGraph: { title: factory.name, description, url: `/factories/${slug}`, ...(og ? { images: [og] } : {}) },
+  };
 }
 
 export default async function FactoryPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -31,6 +39,13 @@ export default async function FactoryPage({ params }: { params: Promise<{ slug: 
 
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Главная", url: "/" },
+          { name: "Фабрики", url: "/factories" },
+          { name: factory.name, url: `/factories/${slug}` },
+        ])}
+      />
       <PageHeader crumbs={[{ label: "Главная", href: "/" }, { label: "Фабрики", href: "/factories" }, { label: factory.name }]} title={factory.name} />
 
       <Container className="py-12">

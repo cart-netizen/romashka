@@ -6,6 +6,7 @@ import { CatalogView } from "@/components/catalog/CatalogView";
 import type { Category } from "@/lib/directus.types";
 import { getCatalog, getCatalogFacets, getSubcategories, getSubcategoryBySlug } from "@/lib/directus";
 import { parseCatalogParams, type RawParams } from "@/lib/catalog-params";
+import { JsonLd, breadcrumbJsonLd } from "@/lib/seo";
 
 export async function generateMetadata({
   params,
@@ -41,6 +42,14 @@ export default async function SubcategoryPage({
 
   return (
     <>
+      <JsonLd
+        data={breadcrumbJsonLd([
+          { name: "Главная", url: "/" },
+          { name: "Каталог", url: "/catalog" },
+          { name: parent?.name ?? "Категория", url: `/catalog/${category}` },
+          { name: sub.name, url: `/catalog/${category}/${subcategory}` },
+        ])}
+      />
       <PageHeader
         crumbs={[
           { label: "Главная", href: "/" },
