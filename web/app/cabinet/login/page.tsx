@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useActionState } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/Button";
 import { Input, Label } from "@/components/ui/Input";
+import { loginAction, type LoginState } from "@/lib/auth-actions";
 
 export default function CabinetLoginPage() {
-  const [notice, setNotice] = useState<string | null>(null);
+  const [state, action, pending] = useActionState<LoginState, FormData>(loginAction, {});
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center bg-cream px-4 py-12">
@@ -20,13 +21,7 @@ export default function CabinetLoginPage() {
           Доступ к материалам и статусу ваших сделок. Учётную запись создаёт администратор.
         </p>
 
-        <form
-          className="mt-6 space-y-4"
-          onSubmit={(e) => {
-            e.preventDefault();
-            setNotice("Авторизация подключается на следующем этапе. Свяжитесь с менеджером для доступа.");
-          }}
-        >
+        <form action={action} className="mt-6 space-y-4">
           <div>
             <Label htmlFor="email">E-mail</Label>
             <Input id="email" name="email" type="email" autoComplete="email" required placeholder="you@example.com" />
@@ -36,14 +31,14 @@ export default function CabinetLoginPage() {
             <Input id="password" name="password" type="password" autoComplete="current-password" required placeholder="••••••••" />
           </div>
 
-          {notice && (
-            <p className="rounded-[var(--radius-card)] border border-terracotta/30 bg-terracotta/10 px-3 py-2 text-sm text-ink">
-              {notice}
+          {state.error && (
+            <p className="rounded-[var(--radius-card)] border border-cta/40 bg-cta/10 px-3 py-2 text-sm text-ink">
+              {state.error}
             </p>
           )}
 
-          <Button type="submit" fullWidth size="lg">
-            Войти
+          <Button type="submit" fullWidth size="lg" disabled={pending}>
+            {pending ? "Вход…" : "Войти"}
           </Button>
         </form>
 
