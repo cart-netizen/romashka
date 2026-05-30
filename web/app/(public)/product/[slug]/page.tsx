@@ -25,6 +25,7 @@ import {
 import type { Category, Subcategory } from "@/lib/directus.types";
 import { formatPriceFrom, reviewsLabel } from "@/lib/format";
 import { JsonLd, breadcrumbJsonLd, productJsonLd } from "@/lib/seo";
+import { sanitizeCmsHtml } from "@/lib/sanitize";
 import {
   productColors,
   productDimensionIds,
@@ -130,7 +131,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   if (product.description) {
     accordionItems.push({
       title: "Информация о товаре",
-      content: <div className="space-y-3 [&_p]:m-0" dangerouslySetInnerHTML={{ __html: product.description }} />,
+      content: <div className="space-y-3 [&_p]:m-0" dangerouslySetInnerHTML={{ __html: sanitizeCmsHtml(product.description) }} />,
     });
   }
 

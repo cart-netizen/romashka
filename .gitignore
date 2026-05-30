@@ -25,6 +25,12 @@ cms/uploads/
 # --- Directus extensions (устанавливаются из Marketplace в рантайме) ---
 cms/extensions/
 
+# --- Прод-деплой (рантайм-данные и секреты) ---
+deploy/.env
+deploy/directus/
+deploy/backups/
+deploy/nginx/certbot/
+
 # --- Logs ---
 *.log
 npm-debug.log*

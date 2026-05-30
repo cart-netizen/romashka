@@ -17,6 +17,7 @@ const montserrat = Montserrat({
 });
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+const ASSET_HOST = process.env.NEXT_PUBLIC_DIRECTUS_URL ?? "http://localhost:8055";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -49,6 +50,7 @@ export default function RootLayout({
       className={`${playfair.variable} ${montserrat.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
+        <link rel="preconnect" href={ASSET_HOST} />
         {children}
         <CookieBanner />
         <YandexMetrica id={process.env.NEXT_PUBLIC_YANDEX_METRICA_ID} />

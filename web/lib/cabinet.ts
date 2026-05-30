@@ -106,7 +106,7 @@ export async function getMaterials(): Promise<Material[]> {
   );
 }
 
-export function assetDownloadUrl(id: string): string {
-  const base = (process.env.NEXT_PUBLIC_DIRECTUS_URL ?? DIRECTUS_URL).replace(/\/$/, "");
-  return `${base}/assets/${id}?download`;
+/** Ссылка на приватный файл через авторизованный прокси кабинета. */
+export function cabinetFileUrl(id: string): string {
+  return `/cabinet/file/${id}`;
 }

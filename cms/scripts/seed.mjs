@@ -8,6 +8,7 @@ import {
   ensureItemBy,
   ensureUpload,
   updateSingleton,
+  PUBLIC_FOLDER_ID,
 } from "./lib/client.mjs";
 
 const placeholderSvg = (label, bg = "#532529") =>
@@ -31,9 +32,15 @@ async function ensureUser(email, data) {
 async function main() {
   await login();
   console.log("Сиды: файлы-плейсхолдеры…");
-  const imgSofa = await ensureUpload("placeholder-sofa.svg", placeholderSvg("Диван"), { title: "Плейсхолдер: диван" });
-  const imgScene = await ensureUpload("placeholder-scene.svg", placeholderSvg("Интерьер", "#9E5A33"), { title: "Плейсхолдер: сцена" });
-  const imgDraw = await ensureUpload("placeholder-drawing.svg", placeholderSvg("Чертёж", "#221E1A"), { title: "Плейсхолдер: чертёж" });
+  // Каталожные файлы — в публичной папке (доступны публично через /assets)
+  const pub = { folder: PUBLIC_FOLDER_ID };
+  const imgSofa = await ensureUpload("placeholder-sofa.svg", placeholderSvg("Диван"), { title: "Плейсхолдер: диван", ...pub });
+  const imgScene = await ensureUpload("placeholder-scene.svg", placeholderSvg("Интерьер", "#9E5A33"), { title: "Плейсхолдер: сцена", ...pub });
+  const imgDraw = await ensureUpload("placeholder-drawing.svg", placeholderSvg("Чертёж", "#221E1A"), { title: "Плейсхолдер: чертёж", ...pub });
+  // Приватный файл материалов — вне публичной папки (только через кабинет-прокси)
+  const imgMaterial = await ensureUpload("placeholder-material.svg", placeholderSvg("Материал", "#2f5d50"), {
+    title: "Плейсхолдер: материал",
+  });
 
   console.log("Сиды: site_settings…");
   await updateSingleton("site_settings", {
@@ -110,7 +117,7 @@ async function main() {
   ];
   let ms = 1;
   for (const [title, category, description] of materials) {
-    await ensureItemBy("materials", { title }, { title, category, description, file: imgDraw, sort: ms++, status: "published" });
+    await ensureItemBy("materials", { title }, { title, category, description, file: imgMaterial, sort: ms++, status: "published" });
   }
 
   console.log("Сиды: фабрики…");

@@ -1,4 +1,4 @@
-import { getMaterials, MATERIAL_CATEGORY_LABELS, assetDownloadUrl } from "@/lib/cabinet";
+import { getMaterials, MATERIAL_CATEGORY_LABELS, cabinetFileUrl } from "@/lib/cabinet";
 
 export const dynamic = "force-dynamic";
 
@@ -33,7 +33,7 @@ export default async function MaterialsPage() {
               <span className="mt-2 block h-px w-12 bg-terracotta" />
               <ul className="mt-5 grid gap-3 sm:grid-cols-2">
                 {g.items.map((m) => {
-                  const href = m.url || (m.file ? assetDownloadUrl(m.file) : null);
+                  const href = m.url || (m.file ? cabinetFileUrl(m.file) : null);
                   return (
                     <li key={m.id} className="rounded-[var(--radius-card)] border border-line bg-surface p-5">
                       <h3 className="font-serif text-lg text-ink">{m.title}</h3>

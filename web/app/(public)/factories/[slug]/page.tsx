@@ -7,6 +7,7 @@ import { SectionHeading } from "@/components/ui/SectionHeading";
 import { ProductGrid } from "@/components/catalog/ProductGrid";
 import { assetUrl, getFactories, getFactoryBySlug, getProducts } from "@/lib/directus";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/seo";
+import { sanitizeCmsHtml } from "@/lib/sanitize";
 
 export const revalidate = 300;
 
@@ -59,7 +60,7 @@ export default async function FactoryPage({ params }: { params: Promise<{ slug: 
             {factory.description ? (
               <div
                 className="space-y-3 leading-relaxed text-ink/90 [&_p]:m-0"
-                dangerouslySetInnerHTML={{ __html: factory.description }}
+                dangerouslySetInnerHTML={{ __html: sanitizeCmsHtml(factory.description) }}
               />
             ) : (
               <p className="text-muted">Описание фабрики появится позже.</p>

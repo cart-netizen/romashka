@@ -7,7 +7,9 @@ import {
   ensurePolicy,
   ensureAccess,
   ensurePermission,
+  ensureFolder,
   PUBLIC_POLICY,
+  PUBLIC_FOLDER_ID,
 } from "./lib/client.mjs";
 
 const PUBLISHED = { status: { _eq: "published" } };
@@ -24,12 +26,11 @@ const PUBLIC_PUBLISHED = [
   "showcase_scenes",
   "reviews",
 ];
-// Публично читаемые без статуса (справочники, связи, файлы, синглтон).
+// Публично читаемые без статуса (справочники, связи, синглтон).
 const PUBLIC_OPEN = [
   "colors",
   "showcase_hotspots",
   "site_settings",
-  "directus_files",
   "products_colors",
   "products_gallery",
   "products_dimensions_images",
@@ -37,6 +38,9 @@ const PUBLIC_OPEN = [
 
 async function main() {
   await login();
+
+  // Публичная папка файлов (каталог). Приватные файлы — вне неё.
+  await ensureFolder(PUBLIC_FOLDER_ID, "Каталог (публичные файлы)");
 
   // ── Public ──────────────────────────────────────────────────────────────
   console.log("Доступ: Public…");
@@ -46,6 +50,10 @@ async function main() {
   for (const c of PUBLIC_OPEN) {
     await ensurePermission(PUBLIC_POLICY, c, "read", { permissions: {} });
   }
+  // файлы — только из публичной папки (фото каталога); приватные недоступны публично
+  await ensurePermission(PUBLIC_POLICY, "directus_files", "read", {
+    permissions: { folder: { _eq: PUBLIC_FOLDER_ID } },
+  });
   // create leads — только поля формы (status/created_at заполняются сервером/дефолтом)
   await ensurePermission(PUBLIC_POLICY, "leads", "create", {
     fields: ["name", "phone", "email", "message", "product", "selected_size", "source_page", "type"],

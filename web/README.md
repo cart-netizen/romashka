@@ -1,36 +1,42 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# web — Next.js (фронтенд + API)
 
-## Getting Started
+Публичный сайт-витрина и личный кабинет дизайнеров. Next.js 16 (App Router) +
+TypeScript + Tailwind v4. Данные — из Directus (см. `../cms`).
 
-First, run the development server:
-
+## Разработка
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm install
+npm run dev        # http://localhost:3000 (нужен запущенный Directus)
+npm run lint
+npm run typecheck
+npm run build      # прод-сборка (standalone)
+```
+Конфигурация — `.env.local` (см. `.env.example`). Directus должен быть поднят:
+`cd ../cms && docker compose up -d`.
+
+## Структура
+```
+app/
+├─ (public)/        # публичные страницы (Header/Footer/виджеты)
+├─ cabinet/         # кабинет: login + (panel) + прокси файлов
+├─ api/             # lead, subscribe
+├─ layout.tsx       # шрифты, metadata, Метрика, cookie-баннер
+├─ sitemap.ts, robots.ts
+components/          # ui, layout, catalog, product, home, forms, widgets, cabinet
+lib/                 # directus (чтение), directus-write, auth, cabinet, seo,
+                     # validation, max, mail, promo, rate-limit, sanitize, …
+middleware.ts        # защита /cabinet/*
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Ключевые моменты
+- **Чтение каталога** — `lib/directus.ts` (server-only, fetch + ISR). Публичные
+  read идут без токена. На этапе сборки бэкенд может быть недоступен — отдаётся
+  fallback (страницы наполняются в рантайме).
+- **Серверная запись** (лиды/подписки) — `lib/directus-write.ts` с
+  `DIRECTUS_ADMIN_TOKEN` (только сервер). Каналы MAX/SMTP — no-op без ключей.
+- **Кабинет** — Directus auth, httpOnly-куки, refresh в `middleware.ts`,
+  row-level RBAC; приватные файлы — через прокси `/cabinet/file/[id]`.
+- **Безопасность** — заголовки в `next.config.ts`; HSTS на Nginx (прод).
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
-
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
-
-## Learn More
-
-To learn more about Next.js, take a look at the following resources:
-
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Прод
+Образ собирается из `web/Dockerfile` (standalone). Оркестрация — `../deploy`.

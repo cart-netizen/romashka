@@ -36,6 +36,20 @@ function buildQuery(params: Record<string, QueryValue>): string {
 interface FetchOpts {
   revalidate?: number;
   tags?: string[];
+  fallback?: unknown; // используется только при сбое во время сборки
+}
+
+// Во время прод-сборки бэкенд может быть недоступен — тогда отдаём fallback,
+// чтобы собрать образ без БД (данные подтянутся в рантайме через ISR).
+// В рантайме ошибки пробрасываются (видимость проблем).
+const IS_BUILD = process.env.NEXT_PHASE === "phase-production-build";
+
+function onFetchError<T>(path: string, err: unknown, fallback: T): T {
+  if (IS_BUILD) {
+    console.warn(`[directus] сборка без бэкенда: ${path} → fallback (${(err as Error).message})`);
+    return fallback;
+  }
+  throw err instanceof Error ? err : new Error(String(err));
 }
 
 async function dGet<T>(
@@ -44,16 +58,20 @@ async function dGet<T>(
   opts: FetchOpts = {},
 ): Promise<T> {
   const url = `${DIRECTUS_URL}${collectionPath}${buildQuery(params)}`;
-  const res = await fetch(url, {
-    headers: { Accept: "application/json" },
-    next: { revalidate: opts.revalidate ?? DEFAULT_REVALIDATE, tags: opts.tags },
-  });
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Directus ${collectionPath} → ${res.status}: ${body.slice(0, 200)}`);
+  try {
+    const res = await fetch(url, {
+      headers: { Accept: "application/json" },
+      next: { revalidate: opts.revalidate ?? DEFAULT_REVALIDATE, tags: opts.tags },
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`Directus ${collectionPath} → ${res.status}: ${body.slice(0, 200)}`);
+    }
+    const json = await res.json();
+    return json.data as T;
+  } catch (e) {
+    return onFetchError(collectionPath, e, (opts.fallback ?? []) as T);
   }
-  const json = await res.json();
-  return json.data as T;
 }
 
 async function dGetMeta<T>(
@@ -62,16 +80,20 @@ async function dGetMeta<T>(
   opts: FetchOpts = {},
 ): Promise<{ data: T; total: number }> {
   const url = `${DIRECTUS_URL}${collectionPath}${buildQuery({ ...params, meta: "filter_count" })}`;
-  const res = await fetch(url, {
-    headers: { Accept: "application/json" },
-    next: { revalidate: opts.revalidate ?? DEFAULT_REVALIDATE, tags: opts.tags },
-  });
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Directus ${collectionPath} → ${res.status}: ${body.slice(0, 200)}`);
+  try {
+    const res = await fetch(url, {
+      headers: { Accept: "application/json" },
+      next: { revalidate: opts.revalidate ?? DEFAULT_REVALIDATE, tags: opts.tags },
+    });
+    if (!res.ok) {
+      const body = await res.text();
+      throw new Error(`Directus ${collectionPath} → ${res.status}: ${body.slice(0, 200)}`);
+    }
+    const json = await res.json();
+    return { data: json.data as T, total: json.meta?.filter_count ?? (json.data as unknown[]).length };
+  } catch (e) {
+    return onFetchError(collectionPath, e, { data: (opts.fallback ?? []) as T, total: 0 });
   }
-  const json = await res.json();
-  return { data: json.data as T, total: json.meta?.filter_count ?? (json.data as unknown[]).length };
 }
 
 /** URL ассета Directus с трансформациями. Безопасно для серверных и клиентских компонентов. */
@@ -133,7 +155,7 @@ const PRODUCT_DETAIL_FIELDS = [
 // ── Навигация / настройки ─────────────────────────────────────────────────
 
 export async function getSiteSettings(): Promise<SiteSettings> {
-  return dGet<SiteSettings>("/items/site_settings", { fields: "*" }, { tags: ["site_settings"] });
+  return dGet<SiteSettings>("/items/site_settings", { fields: "*" }, { tags: ["site_settings"], fallback: {} });
 }
 
 /** Категории с подкатегориями — для шапки и mega-menu (две выборки + группировка). */

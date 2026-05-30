@@ -181,6 +181,18 @@ export async function ensureM2M(collection, field, related, { junction, sortable
 
 export const PUBLIC_POLICY = "abf8a154-5b1c-4a46-ac9c-7300570f4f17";
 
+// Фиксированный id публичной папки файлов (каталог). Приватные файлы
+// (материалы, вложения сделок) хранятся вне неё и недоступны публично.
+export const PUBLIC_FOLDER_ID = "a0000000-0000-4000-8000-000000000001";
+
+export async function ensureFolder(id, name) {
+  const existing = await tryGet(`/folders/${id}`);
+  if (existing) return id;
+  await post("/folders", { id, name });
+  console.log(`  + folder ${name}`);
+  return id;
+}
+
 export async function ensureRole(name, def = {}) {
   const found = await get(`/roles?filter[name][_eq]=${encodeURIComponent(name)}&fields=id`);
   if (found?.length) return found[0].id;
@@ -249,13 +261,21 @@ export async function updateSingleton(collection, data) {
 }
 
 // Загрузка файла (idempotent по filename_download). content — строка/Buffer.
-export async function ensureUpload(filename, content, { type = "image/svg+xml", title } = {}) {
+// folder: id папки или null (приватные файлы — вне публичной папки).
+export async function ensureUpload(filename, content, { type = "image/svg+xml", title, folder = null } = {}) {
   const found = await get(
-    `/files?filter[filename_download][_eq]=${encodeURIComponent(filename)}&fields=id&limit=1`,
+    `/files?filter[filename_download][_eq]=${encodeURIComponent(filename)}&fields=id,folder&limit=1`,
   );
-  if (found?.length) return found[0].id;
+  if (found?.length) {
+    // выравниваем папку при повторном прогоне
+    if ((found[0].folder ?? null) !== (folder ?? null)) {
+      await patch(`/files/${found[0].id}`, { folder });
+    }
+    return found[0].id;
+  }
   const form = new FormData();
   if (title) form.append("title", title);
+  if (folder) form.append("folder", folder);
   form.append("file", new Blob([content], { type }), filename);
   const res = await fetch(`${URL}/files`, {
     method: "POST",

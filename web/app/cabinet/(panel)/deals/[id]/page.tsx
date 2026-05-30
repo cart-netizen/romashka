@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { CommissionBadge, StatusTimeline } from "@/components/cabinet/DealBits";
-import { assetDownloadUrl, getMyDeal } from "@/lib/cabinet";
+import { cabinetFileUrl, getMyDeal } from "@/lib/cabinet";
 import { formatPrice } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -79,7 +79,7 @@ export default async function DealDetailPage({ params }: { params: Promise<{ id:
             {attachments.map((f) => (
               <li key={f.id}>
                 <a
-                  href={assetDownloadUrl(f.id)}
+                  href={cabinetFileUrl(f.id)}
                   className="text-sm text-terracotta underline underline-offset-2 hover:text-cta"
                   target="_blank"
                   rel="noopener noreferrer"
