@@ -4,11 +4,23 @@ import { useRef, useState } from "react";
 import Image from "next/image";
 import { ChevronDownIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
+import { Lightbox } from "./Lightbox";
 
-export function ProductGallery({ images, alt }: { images: string[]; alt: string }) {
+export function ProductGallery({
+  images,
+  fullImages,
+  alt,
+}: {
+  images: string[];
+  fullImages?: string[];
+  alt: string;
+}) {
   const [active, setActive] = useState(0);
+  const [zoom, setZoom] = useState(false);
   const thumbsRef = useRef<HTMLDivElement>(null);
   const main = images[active];
+  const big = fullImages ?? images;
+  const n = images.length;
 
   return (
     <div className="flex gap-4">
@@ -43,13 +55,30 @@ export function ProductGallery({ images, alt }: { images: string[]; alt: string 
         </div>
       )}
 
-      <div className="relative aspect-square flex-1 overflow-hidden rounded-[var(--radius-card)] bg-surface">
-        {main ? (
+      {main ? (
+        <button
+          type="button"
+          aria-label="Открыть фото на весь экран"
+          onClick={() => setZoom(true)}
+          className="relative aspect-square flex-1 cursor-zoom-in overflow-hidden rounded-[var(--radius-card)] bg-surface"
+        >
           <Image src={main} alt={alt} fill priority sizes="(max-width: 1024px) 100vw, 50vw" className="object-cover" />
-        ) : (
-          <div className="flex h-full items-center justify-center text-muted">нет фото</div>
-        )}
-      </div>
+        </button>
+      ) : (
+        <div className="relative flex aspect-square flex-1 items-center justify-center rounded-[var(--radius-card)] bg-surface text-muted">
+          нет фото
+        </div>
+      )}
+
+      {zoom && (
+        <Lightbox
+          images={big}
+          index={active}
+          onClose={() => setZoom(false)}
+          onPrev={() => setActive((i) => (i - 1 + n) % n)}
+          onNext={() => setActive((i) => (i + 1) % n)}
+        />
+      )}
     </div>
   );
 }

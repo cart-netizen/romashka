@@ -75,6 +75,9 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const galleryUrls = productGalleryIds(product)
     .map((id) => assetUrl(id, { width: 900, height: 900, fit: "cover" }))
     .filter((u): u is string => !!u);
+  const galleryFullUrls = productGalleryIds(product)
+    .map((id) => assetUrl(id, { width: 1600, quality: 90 }))
+    .filter((u): u is string => !!u);
   const dimensionUrls = productDimensionIds(product)
     .map((id) => assetUrl(id, { width: 1000 }))
     .filter((u): u is string => !!u);
@@ -168,7 +171,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
           <div className="mt-8 grid gap-10 lg:grid-cols-2 lg:items-start">
             {/* Галерея — липкая, остаётся перед глазами при скролле */}
             <div className="lg:sticky lg:top-24 lg:self-start">
-              <ProductGallery images={galleryUrls} alt={product.name} />
+              <ProductGallery images={galleryUrls} fullImages={galleryFullUrls} alt={product.name} />
             </div>
 
             {/* Боковой блок с информацией — скроллится независимо */}
