@@ -104,6 +104,19 @@ export interface Product {
   factory: Factory | number | null;
   sort: number | null;
   status: Status;
+  size_variants?: ProductSizeVariant[];
+}
+
+export interface ProductSizeVariant {
+  id: number;
+  label: string;
+  width_cm: number | null;
+  height_cm: number | null;
+  depth_cm: number | null;
+  price: number | null;
+  image: string | null;
+  dimensions_image: string | null;
+  sort: number | null;
 }
 
 export interface Review {

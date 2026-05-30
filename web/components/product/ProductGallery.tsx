@@ -5,6 +5,7 @@ import Image from "next/image";
 import { ChevronDownIcon } from "@/components/ui/icons";
 import { cn } from "@/lib/cn";
 import { Lightbox } from "./Lightbox";
+import { useSizeVariant } from "./SizeVariantContext";
 
 export function ProductGallery({
   images,
@@ -15,19 +16,35 @@ export function ProductGallery({
   fullImages?: string[];
   alt: string;
 }) {
+  // Заглавное фото размера-варианта (если есть) — первым в галерее, остальные общие.
+  const variant = useSizeVariant();
+  const lead = variant ? variant.variants[variant.index] : null;
+  const variantIndex = variant?.index ?? -1;
+
+  const display = lead?.image ? [lead.image, ...images] : images;
+  const baseFull = fullImages ?? images;
+  const displayFull = lead?.imageFull ? [lead.imageFull, ...baseFull] : baseFull;
+
   const [active, setActive] = useState(0);
+  // При смене размера показываем заглавное фото варианта (корректировка стейта при смене пропа).
+  const [prevVariant, setPrevVariant] = useState(variantIndex);
+  if (variantIndex !== prevVariant) {
+    setPrevVariant(variantIndex);
+    setActive(0);
+  }
+
   const [zoom, setZoom] = useState(false);
   const thumbsRef = useRef<HTMLDivElement>(null);
-  const main = images[active];
-  const big = fullImages ?? images;
-  const n = images.length;
+  const n = display.length;
+  const safe = Math.min(active, Math.max(0, n - 1));
+  const main = display[safe];
 
   return (
     <div className="flex gap-4">
-      {images.length > 1 && (
+      {n > 1 && (
         <div className="flex w-20 shrink-0 flex-col items-center gap-2">
           <div ref={thumbsRef} className="scrollbar-thin flex max-h-[520px] w-full flex-col gap-3 overflow-y-auto">
-            {images.map((img, i) => (
+            {display.map((img, i) => (
               <button
                 key={img + i}
                 type="button"
@@ -35,14 +52,14 @@ export function ProductGallery({
                 aria-label={`Фото ${i + 1}`}
                 className={cn(
                   "relative aspect-square overflow-hidden rounded-[var(--radius-card)] border bg-surface",
-                  i === active ? "border-ink" : "border-line hover:border-ink/40",
+                  i === safe ? "border-ink" : "border-line hover:border-ink/40",
                 )}
               >
                 <Image src={img} alt="" fill sizes="80px" className="object-cover" />
               </button>
             ))}
           </div>
-          {images.length > 4 && (
+          {n > 4 && (
             <button
               type="button"
               aria-label="Прокрутить миниатюры"
@@ -72,8 +89,8 @@ export function ProductGallery({
 
       {zoom && (
         <Lightbox
-          images={big}
-          index={active}
+          images={displayFull}
+          index={safe}
           onClose={() => setZoom(false)}
           onPrev={() => setActive((i) => (i - 1 + n) % n)}
           onNext={() => setActive((i) => (i + 1) % n)}

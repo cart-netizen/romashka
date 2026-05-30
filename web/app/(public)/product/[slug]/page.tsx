@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Container } from "@/components/ui/Container";
 import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
@@ -10,6 +9,9 @@ import { FavoriteButton } from "@/components/FavoriteButton";
 import { RelatedProducts } from "@/components/product/RelatedProducts";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { ProductOptions } from "@/components/product/ProductOptions";
+import { SizeVariantProvider, type VariantView } from "@/components/product/SizeVariantContext";
+import { VariantPrice } from "@/components/product/VariantPrice";
+import { VariantDimensions } from "@/components/product/VariantDimensions";
 import { Rating } from "@/components/product/Rating";
 import { ReviewsBlock } from "@/components/product/ReviewsBlock";
 import {
@@ -23,7 +25,7 @@ import {
 } from "@/lib/directus";
 import type { Category, Subcategory } from "@/lib/directus.types";
 import { UPHOLSTERY_LABELS } from "@/lib/directus.types";
-import { formatPriceFrom, reviewsLabel } from "@/lib/format";
+import { reviewsLabel } from "@/lib/format";
 import { JsonLd, breadcrumbJsonLd, productJsonLd } from "@/lib/seo";
 import { sanitizeCmsHtml } from "@/lib/sanitize";
 import {
@@ -94,6 +96,24 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
   const subcategory =
     product.subcategory && typeof product.subcategory === "object" ? (product.subcategory as Subcategory) : null;
   const sizes = (product.sizes ?? []).map(sizeLabel);
+
+  // Размеры-варианты (своё фото/чертёж/цена). Если есть — управляют галереей/ценой/чертежом.
+  const variantViews: VariantView[] = (product.size_variants ?? [])
+    .slice()
+    .sort((a, b) => (a.sort ?? 0) - (b.sort ?? 0))
+    .map((v) => {
+      const dims = [v.width_cm, v.height_cm, v.depth_cm].filter((x) => x != null);
+      return {
+        label: v.label,
+        dims: dims.length ? `${dims.join("×")} см` : "",
+        price: v.price,
+        image: assetUrl(v.image, { width: 900, height: 900, fit: "cover" }),
+        imageFull: assetUrl(v.image, { width: 1600, quality: 90 }),
+        dimImage: assetUrl(v.dimensions_image, { width: 1000 }),
+      };
+    });
+  const hasVariants = variantViews.length > 0;
+
   const ratings = reviews.map((r) => r.rating ?? 0).filter((n) => n > 0);
   const average = ratings.length ? ratings.reduce((a, b) => a + b, 0) / ratings.length : 0;
   const leadTimeNote = product.lead_time_note ?? settings.default_lead_time_note;
@@ -117,25 +137,10 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       ),
     });
   }
-  if (dimensionUrls.length || settings.dimensions_disclaimer) {
+  if (hasVariants || dimensionUrls.length || settings.dimensions_disclaimer) {
     accordionItems.push({
       title: "Фактические размеры",
-      content: (
-        <div>
-          {dimensionUrls.length > 0 && (
-            <div className="grid gap-4 sm:grid-cols-2">
-              {dimensionUrls.map((u, i) => (
-                <div key={i} className="relative aspect-[4/3] overflow-hidden rounded-[var(--radius-card)] bg-surface">
-                  <Image src={u} alt={`Чертёж ${i + 1}`} fill sizes="(max-width: 640px) 100vw, 400px" className="object-contain" />
-                </div>
-              ))}
-            </div>
-          )}
-          {settings.dimensions_disclaimer && (
-            <p className="mt-4 text-xs text-muted">{settings.dimensions_disclaimer}</p>
-          )}
-        </div>
-      ),
+      content: <VariantDimensions baseImages={dimensionUrls} disclaimer={settings.dimensions_disclaimer} />,
     });
   }
   if (product.description) {
@@ -171,6 +176,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         })}
       />
       <JsonLd data={breadcrumbJsonLd(crumbs.map((c) => ({ name: c.label, url: c.href })))} />
+      <SizeVariantProvider variants={variantViews}>
       <div className="bg-white">
         <Container className="py-8">
           <Breadcrumbs items={crumbs} />
@@ -208,7 +214,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
             {product.sku && <p className="mt-3 text-sm text-muted">Артикул: {product.sku}</p>}
 
-            <p className="mt-4 font-serif text-3xl text-ink">{formatPriceFrom(product.price_from)}</p>
+            <VariantPrice basePrice={product.price_from} />
 
             <div className="mt-6">
               <ProductOptions
@@ -252,6 +258,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
         <ReviewsBlock reviews={reviews} average={average} />
       </div>
+      </SizeVariantProvider>
     </>
   );
 }

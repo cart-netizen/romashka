@@ -7,6 +7,7 @@ import {
   ensureM2O,
   ensureFile,
   ensureM2M,
+  ensureRelation,
 } from "./lib/client.mjs";
 
 // ── шорткаты определений полей ────────────────────────────────────────────────
@@ -74,6 +75,7 @@ async function main() {
     ["menu_promos", { icon: "ad_units", ...sortMeta }],
     ["usp_messages", { icon: "campaign", ...sortMeta }],
     ["products", { icon: "weekend", ...sortMeta }],
+    ["product_sizes", { icon: "straighten", sort_field: "sort", hidden: true }],
     ["reviews", { icon: "reviews", archive_field: "status", archive_value: "archived", unarchive_value: "draft" }],
     ["leads", { icon: "call_received" }],
     ["subscribers", { icon: "mail" }],
@@ -180,6 +182,32 @@ async function main() {
   await ensureField("products", "in_stock", boolean(true));
   await ensureField("products", "sort", integer());
   await ensureField("products", "status", status());
+
+  // 8b) product_sizes — размеры-варианты (своё фото/чертёж/цена), O2M от products
+  await ensureField("product_sizes", "product", {
+    type: "integer",
+    meta: { special: ["m2o"], interface: "select-dropdown-m2o", hidden: true },
+    schema: {},
+  });
+  await ensureRelation({
+    collection: "product_sizes",
+    field: "product",
+    related_collection: "products",
+    schema: { on_delete: "CASCADE" },
+    meta: { one_field: "size_variants", sort_field: "sort" },
+  });
+  await ensureField("products", "size_variants", {
+    type: "alias",
+    meta: { special: ["o2m"], interface: "list-o2m" },
+  });
+  await ensureField("product_sizes", "label", string({ required: true }));
+  await ensureField("product_sizes", "width_cm", integer());
+  await ensureField("product_sizes", "height_cm", integer());
+  await ensureField("product_sizes", "depth_cm", integer());
+  await ensureField("product_sizes", "price", integer());
+  await ensureFile("product_sizes", "image");
+  await ensureFile("product_sizes", "dimensions_image");
+  await ensureField("product_sizes", "sort", integer());
 
   // 9) reviews
   await ensureM2O("reviews", "product", "products", { onDelete: "CASCADE", required: true });

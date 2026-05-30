@@ -214,6 +214,21 @@ async function main() {
     p.id = id;
   }
 
+  console.log("Сиды: размеры-варианты (Милано)…");
+  const vImgA = await ensureUpload("variant-milano-2.svg", placeholderSvg("2-местный", "#6b4f3a"), { title: "Милано 2-местный", ...pub });
+  const vImgB = await ensureUpload("variant-milano-3.svg", placeholderSvg("3-местный", "#532529"), { title: "Милано 3-местный", ...pub });
+  const vImgC = await ensureUpload("variant-milano-u.svg", placeholderSvg("Угловой", "#2f5d50"), { title: "Милано угловой", ...pub });
+  const milano = products[0].id;
+  const variants = [
+    { label: "2-местный", width_cm: 230, height_cm: 84, depth_cm: 106, price: 189000, image: vImgA, dimensions_image: imgDraw },
+    { label: "3-местный", width_cm: 317, height_cm: 84, depth_cm: 106, price: 219000, image: vImgB, dimensions_image: imgDraw },
+    { label: "Угловой", width_cm: 268, height_cm: 84, depth_cm: 168, price: 264000, image: vImgC, dimensions_image: imgDraw },
+  ];
+  let vs = 1;
+  for (const v of variants) {
+    await ensureItemBy("product_sizes", { product: milano, label: v.label }, { product: milano, ...v, sort: vs++ });
+  }
+
   console.log("Сиды: отзывы…");
   await ensureItemBy("reviews", { author_name: "Анна К." }, { product: products[0].id, author_name: "Анна К.", rating: 5, text: "Диван превзошёл ожидания, обивку подобрали идеально.", status: "published" });
   await ensureItemBy("reviews", { author_name: "Игорь П." }, { product: products[0].id, author_name: "Игорь П.", rating: 4, text: "Качество отличное, доставка чуть задержалась.", status: "published" });

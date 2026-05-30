@@ -6,6 +6,7 @@ import { LeadFormModal } from "@/components/forms/LeadFormModal";
 import { cn } from "@/lib/cn";
 import { FabricSwatches, type Swatch } from "./FabricSwatches";
 import { UspBanner } from "./UspBanner";
+import { useSizeVariant } from "./SizeVariantContext";
 
 export function ProductOptions({
   productId,
@@ -26,24 +27,32 @@ export function ProductOptions({
   leadTimeNote: string | null;
   messengerLink: string | null;
 }) {
-  const [selected, setSelected] = useState(0);
+  const ctx = useSizeVariant();
+  const [localSize, setLocalSize] = useState(0);
   const [modal, setModal] = useState<null | "price_request" | "callback">(null);
-  const selectedSize = sizes[selected];
+
+  // Если у товара есть размеры-варианты — кнопки берём из них и управляем общим контекстом
+  // (синхронно меняются фото, чертёж, цена). Иначе — информационные размеры из repeater.
+  const useVariants = !!ctx && ctx.variants.length > 0;
+  const sizeLabels = useVariants ? ctx!.variants.map((v) => v.label) : sizes;
+  const selIndex = useVariants ? ctx!.index : localSize;
+  const selectSize = useVariants ? ctx!.setIndex : setLocalSize;
+  const selectedSize = sizeLabels[selIndex];
 
   return (
     <div className="space-y-6">
-      {sizes.length > 0 && (
+      {sizeLabels.length > 0 && (
         <div>
           <span className="font-serif text-base text-ink">Размер:</span>
           <div className="mt-2 flex flex-wrap gap-2">
-            {sizes.map((s, i) => (
+            {sizeLabels.map((s, i) => (
               <button
                 key={s + i}
                 type="button"
-                onClick={() => setSelected(i)}
+                onClick={() => selectSize(i)}
                 className={cn(
                   "rounded-[var(--radius-card)] border px-4 py-2 text-sm transition-colors",
-                  i === selected ? "border-ink bg-ink text-cream" : "border-line text-ink hover:border-ink",
+                  i === selIndex ? "border-ink bg-ink text-cream" : "border-line text-ink hover:border-ink",
                 )}
               >
                 {s}

@@ -25,6 +25,8 @@ const PUBLIC_FILE_FIELDS = [
   ["showcase_scenes", "image"],
   ["site_settings", "hero_video"],
   ["colors", "swatch_image"],
+  ["product_sizes", "image"],
+  ["product_sizes", "dimensions_image"],
 ];
 
 const PUBLISHED = { status: { _eq: "published" } };
@@ -49,6 +51,7 @@ const PUBLIC_OPEN = [
   "products_colors",
   "products_gallery",
   "products_dimensions_images",
+  "product_sizes",
 ];
 
 async function main() {
