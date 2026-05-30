@@ -5,6 +5,7 @@ import {
   post,
   patch,
   ensureRole,
+  ensureItem,
   ensureItemBy,
   ensureUpload,
   updateSingleton,
@@ -17,6 +18,21 @@ const placeholderSvg = (label, bg = "#532529") =>
   `<rect x="40" y="40" width="1120" height="820" fill="none" stroke="#F5F0E8" stroke-width="3"/>` +
   `<text x="600" y="470" font-family="Georgia, serif" font-size="64" fill="#F5F0E8" text-anchor="middle">${label}</text>` +
   `</svg>`;
+
+// Текстура-свотч обивки (имитация ткани) заданного цвета.
+const fabricSvg = (hex) => {
+  let dots = "";
+  for (let i = 0; i < 140; i++) {
+    const x = Math.floor(Math.random() * 400);
+    const y = Math.floor(Math.random() * 400);
+    const o = (Math.random() * 0.12).toFixed(2);
+    dots += `<circle cx="${x}" cy="${y}" r="${1 + Math.floor(Math.random() * 2)}" fill="#000" opacity="${o}"/>`;
+  }
+  return (
+    `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">` +
+    `<rect width="400" height="400" fill="${hex}"/>${dots}</svg>`
+  );
+};
 
 async function ensureUser(email, data) {
   const found = await get(`/users?filter[email][_eq]=${encodeURIComponent(email)}&fields=id&limit=1`);
@@ -77,7 +93,12 @@ async function main() {
     ["Изумрудный", "#2F5D50"],
     ["Молочный", "#F5F0E8"],
   ]) {
-    colors[name] = await ensureItemBy("colors", { name }, { name, hex, sort: Object.keys(colors).length + 1 });
+    const swatch = await ensureUpload(`swatch-${hex.slice(1)}.svg`, fabricSvg(hex), { title: `Обивка: ${name}`, ...pub });
+    colors[name] = await ensureItem("colors", "name", name, {
+      hex,
+      swatch_image: swatch,
+      sort: Object.keys(colors).length + 1,
+    });
   }
 
   console.log("Сиды: категории…");

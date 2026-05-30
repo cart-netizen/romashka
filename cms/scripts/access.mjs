@@ -24,6 +24,7 @@ const PUBLIC_FILE_FIELDS = [
   ["menu_promos", "image"],
   ["showcase_scenes", "image"],
   ["site_settings", "hero_video"],
+  ["colors", "swatch_image"],
 ];
 
 const PUBLISHED = { status: { _eq: "published" } };

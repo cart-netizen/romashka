@@ -141,6 +141,7 @@ const PRODUCT_DETAIL_FIELDS = [
   "colors.colors_id.id",
   "colors.colors_id.name",
   "colors.colors_id.hex",
+  "colors.colors_id.swatch_image",
   "category.id",
   "category.name",
   "category.slug",

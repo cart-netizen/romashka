@@ -9,8 +9,7 @@ import { Accordion, type AccordionItem } from "@/components/ui/Accordion";
 import { FavoriteButton } from "@/components/FavoriteButton";
 import { RelatedProducts } from "@/components/product/RelatedProducts";
 import { ProductGallery } from "@/components/product/ProductGallery";
-import { ProductPurchasePanel } from "@/components/product/ProductPurchasePanel";
-import { UspBanner } from "@/components/product/UspBanner";
+import { ProductOptions } from "@/components/product/ProductOptions";
 import { Rating } from "@/components/product/Rating";
 import { ReviewsBlock } from "@/components/product/ReviewsBlock";
 import {
@@ -23,6 +22,7 @@ import {
   getUspMessages,
 } from "@/lib/directus";
 import type { Category, Subcategory } from "@/lib/directus.types";
+import { UPHOLSTERY_LABELS } from "@/lib/directus.types";
 import { formatPriceFrom, reviewsLabel } from "@/lib/format";
 import { JsonLd, breadcrumbJsonLd, productJsonLd } from "@/lib/seo";
 import { sanitizeCmsHtml } from "@/lib/sanitize";
@@ -82,6 +82,13 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
     .map((id) => assetUrl(id, { width: 1000 }))
     .filter((u): u is string => !!u);
   const colors = productColors(product);
+  const materials = (product.upholstery ?? []).map((u) => UPHOLSTERY_LABELS[u] ?? u).join(", ");
+  const swatches = colors.map((c) => ({
+    id: c.id,
+    name: c.name,
+    hex: c.hex,
+    image: assetUrl(c.swatch_image, { width: 600 }),
+  }));
   const factory = productFactory(product);
   const category = product.category && typeof product.category === "object" ? (product.category as Category) : null;
   const subcategory =
@@ -168,7 +175,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         <Container className="py-8">
           <Breadcrumbs items={crumbs} />
 
-          <div className="mt-8 grid gap-10 lg:grid-cols-2 lg:items-start">
+          <div className="mt-8 grid gap-10 lg:grid-cols-[1.5fr_1fr] lg:items-start">
             {/* Галерея — липкая, остаётся перед глазами при скролле */}
             <div className="lg:sticky lg:top-24 lg:self-start">
               <ProductGallery images={galleryUrls} fullImages={galleryFullUrls} alt={product.name} />
@@ -203,37 +210,18 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
 
             <p className="mt-4 font-serif text-3xl text-ink">{formatPriceFrom(product.price_from)}</p>
 
-            {colors.length > 0 && (
-              <div className="mt-5 flex items-center gap-2">
-                <span className="text-sm text-muted">Цвета:</span>
-                <div className="flex items-center gap-1.5">
-                  {colors.map((c) => (
-                    <span
-                      key={c.id}
-                      title={c.name}
-                      className="h-5 w-5 rounded-full border border-line"
-                      style={{ backgroundColor: c.hex ?? "transparent" }}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
             <div className="mt-6">
-              <ProductPurchasePanel
+              <ProductOptions
                 productId={product.id}
                 productName={product.name}
                 sizes={sizes}
+                materials={materials}
+                swatches={swatches}
+                uspMessages={usp.map((u) => u.text)}
                 leadTimeNote={leadTimeNote}
                 messengerLink={settings.messenger_max_link}
               />
             </div>
-
-            {usp.length > 0 && (
-              <div className="mt-6">
-                <UspBanner messages={usp.map((u) => u.text)} />
-              </div>
-            )}
 
               {factory && (
                 <p className="mt-6 text-sm text-muted">

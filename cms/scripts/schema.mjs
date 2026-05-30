@@ -114,6 +114,7 @@ async function main() {
   // 5) colors
   await ensureField("colors", "name", string({ required: true }));
   await ensureField("colors", "hex", { type: "string", meta: { interface: "select-color" } });
+  await ensureFile("colors", "swatch_image"); // фото-свотч обивки (текстура)
   await ensureField("colors", "sort", integer());
 
   // 6) menu_promos

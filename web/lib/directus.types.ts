@@ -8,6 +8,7 @@ export interface Color {
   id: number;
   name: string;
   hex: string | null;
+  swatch_image: string | null;
   sort: number | null;
 }
 

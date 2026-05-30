@@ -4,17 +4,25 @@ import { useState } from "react";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { LeadFormModal } from "@/components/forms/LeadFormModal";
 import { cn } from "@/lib/cn";
+import { FabricSwatches, type Swatch } from "./FabricSwatches";
+import { UspBanner } from "./UspBanner";
 
-export function ProductPurchasePanel({
+export function ProductOptions({
   productId,
   productName,
   sizes,
+  materials,
+  swatches,
+  uspMessages,
   leadTimeNote,
   messengerLink,
 }: {
   productId: number;
   productName: string;
   sizes: string[];
+  materials: string;
+  swatches: Swatch[];
+  uspMessages: string[];
   leadTimeNote: string | null;
   messengerLink: string | null;
 }) {
@@ -23,10 +31,10 @@ export function ProductPurchasePanel({
   const selectedSize = sizes[selected];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
       {sizes.length > 0 && (
         <div>
-          <span className="text-sm text-ink">Размер:</span>
+          <span className="font-serif text-base text-ink">Размер:</span>
           <div className="mt-2 flex flex-wrap gap-2">
             {sizes.map((s, i) => (
               <button
@@ -45,22 +53,37 @@ export function ProductPurchasePanel({
         </div>
       )}
 
-      <Button size="lg" fullWidth onClick={() => setModal("price_request")}>
-        Узнать цену
-      </Button>
+      {materials && (
+        <p className="font-serif text-base text-ink">
+          Материалы: <span className="font-sans text-muted">{materials}</span>
+        </p>
+      )}
 
-      <div className="flex flex-wrap gap-3">
-        <Button variant="outline" size="md" className="flex-1" onClick={() => setModal("callback")}>
-          Заказать звонок
+      {swatches.length > 0 && (
+        <div>
+          <p className="mb-2 font-serif text-base text-ink">Цвет обивки под заказ:</p>
+          <FabricSwatches swatches={swatches} />
+        </div>
+      )}
+
+      {uspMessages.length > 0 && <UspBanner messages={uspMessages} />}
+
+      <div className="space-y-3">
+        <Button size="lg" fullWidth onClick={() => setModal("price_request")}>
+          Узнать цену
         </Button>
-        {messengerLink && (
-          <ButtonLink href={messengerLink} variant="burgundy" size="md" className="flex-1" target="_blank" rel="noopener noreferrer">
-            Написать в MAX
-          </ButtonLink>
-        )}
+        <div className="flex flex-wrap gap-3">
+          <Button variant="outline" size="md" className="flex-1" onClick={() => setModal("callback")}>
+            Заказать звонок
+          </Button>
+          {messengerLink && (
+            <ButtonLink href={messengerLink} variant="burgundy" size="md" className="flex-1" target="_blank" rel="noopener noreferrer">
+              Написать в MAX
+            </ButtonLink>
+          )}
+        </div>
+        {leadTimeNote && <p className="text-sm text-muted">{leadTimeNote}</p>}
       </div>
-
-      {leadTimeNote && <p className="text-sm text-muted">{leadTimeNote}</p>}
 
       <LeadFormModal
         open={modal !== null}
