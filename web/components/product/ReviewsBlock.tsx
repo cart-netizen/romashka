@@ -6,7 +6,7 @@ import { Rating } from "./Rating";
 
 export function ReviewsBlock({ reviews, average }: { reviews: Review[]; average: number }) {
   return (
-    <section id="reviews" className="scroll-mt-24 bg-surface">
+    <section id="reviews" className="scroll-mt-24 border-t border-line">
       <Container className="py-16">
         <SectionHeading title="Отзывы" />
 

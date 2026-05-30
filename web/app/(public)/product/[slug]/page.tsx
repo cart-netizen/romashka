@@ -7,7 +7,7 @@ import { Breadcrumbs } from "@/components/ui/Breadcrumbs";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import { Accordion, type AccordionItem } from "@/components/ui/Accordion";
 import { FavoriteButton } from "@/components/FavoriteButton";
-import { ProductGrid } from "@/components/catalog/ProductGrid";
+import { RelatedProducts } from "@/components/product/RelatedProducts";
 import { ProductGallery } from "@/components/product/ProductGallery";
 import { ProductPurchasePanel } from "@/components/product/ProductPurchasePanel";
 import { UspBanner } from "@/components/product/UspBanner";
@@ -161,14 +161,19 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
         })}
       />
       <JsonLd data={breadcrumbJsonLd(crumbs.map((c) => ({ name: c.label, url: c.href })))} />
-      <Container className="py-8">
-        <Breadcrumbs items={crumbs} />
+      <div className="bg-white">
+        <Container className="py-8">
+          <Breadcrumbs items={crumbs} />
 
-        <div className="mt-8 grid gap-10 lg:grid-cols-2">
-          <ProductGallery images={galleryUrls} alt={product.name} />
+          <div className="mt-8 grid gap-10 lg:grid-cols-2 lg:items-start">
+            {/* Галерея — липкая, остаётся перед глазами при скролле */}
+            <div className="lg:sticky lg:top-24 lg:self-start">
+              <ProductGallery images={galleryUrls} alt={product.name} />
+            </div>
 
-          <div>
-            <div className="flex items-start justify-between gap-4">
+            {/* Боковой блок с информацией — скроллится независимо */}
+            <div>
+              <div className="flex items-start justify-between gap-4">
               <h1 className="text-3xl sm:text-4xl">{product.name}</h1>
               <FavoriteButton
                 size="lg"
@@ -227,34 +232,35 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
               </div>
             )}
 
-            {factory && (
-              <p className="mt-6 text-sm text-muted">
-                Фабрика-производитель:{" "}
-                <Link href={`/factories/${factory.slug}`} className="text-ink underline underline-offset-2 hover:text-terracotta">
-                  {factory.name}
-                </Link>
-              </p>
-            )}
-          </div>
-        </div>
+              {factory && (
+                <p className="mt-6 text-sm text-muted">
+                  Фабрика-производитель:{" "}
+                  <Link href={`/factories/${factory.slug}`} className="text-ink underline underline-offset-2 hover:text-terracotta">
+                    {factory.name}
+                  </Link>
+                </p>
+              )}
 
-        {accordionItems.length > 0 && (
-          <div className="mx-auto mt-14 max-w-3xl">
-            <Accordion items={accordionItems} />
-          </div>
-        )}
-      </Container>
-
-      {related.length > 0 && (
-        <Container className="py-16">
-          <SectionHeading title="Рекомендуем также" />
-          <div className="mt-10">
-            <ProductGrid products={related} />
+              {accordionItems.length > 0 && (
+                <div className="mt-10">
+                  <Accordion items={accordionItems} />
+                </div>
+              )}
+            </div>
           </div>
         </Container>
-      )}
 
-      <ReviewsBlock reviews={reviews} average={average} />
+        {related.length > 0 && (
+          <Container className="pb-16">
+            <SectionHeading title="Рекомендуем также" />
+            <div className="mt-10">
+              <RelatedProducts products={related} />
+            </div>
+          </Container>
+        )}
+
+        <ReviewsBlock reviews={reviews} average={average} />
+      </div>
     </>
   );
 }
