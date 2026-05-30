@@ -275,6 +275,9 @@ async function main() {
   await ensureField("site_settings", "seo_default_description", text());
   await ensureField("site_settings", "hero_title", string());
   await ensureField("site_settings", "hero_subtitle", text());
+  await ensureFile("site_settings", "hero_video", { iface: "file" });
+  await ensureField("site_settings", "timeline_title", string());
+  await ensureFile("site_settings", "timeline_image");
   await ensureField("site_settings", "dimensions_disclaimer", text());
   await ensureField("site_settings", "default_lead_time_note", string());
   await ensureField("site_settings", "promo_amount", integer(5000));

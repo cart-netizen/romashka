@@ -128,6 +128,9 @@ export interface SiteSettings {
   seo_default_description: string | null;
   hero_title: string | null;
   hero_subtitle: string | null;
+  hero_video: string | null;
+  timeline_title: string | null;
+  timeline_image: string | null;
   dimensions_disclaimer: string | null;
   default_lead_time_note: string | null;
   promo_amount: number | null;

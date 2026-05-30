@@ -129,3 +129,26 @@ export const StoreIcon = (p: IconProps) => (
     <path d="M4 9 5 4h14l1 5M4 9h16M4 9v11h16V9M9 20v-6h6v6" />
   </Svg>
 );
+
+export const ShieldIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M12 3 5 6v6c0 4 3 6.5 7 9 4-2.5 7-5 7-9V6l-7-3Z" />
+    <path d="m9 12 2 2 4-4" />
+  </Svg>
+);
+
+export const SwatchIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <rect x="4" y="4" width="7" height="7" rx="1" />
+    <rect x="13" y="4" width="7" height="7" rx="1" />
+    <rect x="4" y="13" width="7" height="7" rx="1" />
+    <circle cx="16.5" cy="16.5" r="3.5" />
+  </Svg>
+);
+
+export const CardIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <rect x="3" y="5" width="18" height="14" rx="2" />
+    <path d="M3 10h18M7 15h4" />
+  </Svg>
+);

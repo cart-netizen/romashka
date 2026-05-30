@@ -6218,6 +6218,130 @@ fields:
       has_auto_increment: false
       foreign_key_table: null
       foreign_key_column: null
+  - collection: site_settings
+    field: hero_video
+    type: uuid
+    meta:
+      collection: site_settings
+      conditions: null
+      display: null
+      display_options: null
+      field: hero_video
+      group: null
+      hidden: false
+      interface: file
+      note: null
+      options:
+        folder: a0000000-0000-4000-8000-000000000001
+      readonly: false
+      required: false
+      searchable: true
+      sort: 19
+      special:
+        - file
+      translations: null
+      validation: null
+      validation_message: null
+      width: full
+    schema:
+      name: hero_video
+      table: site_settings
+      data_type: uuid
+      default_value: null
+      max_length: null
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: true
+      is_unique: false
+      is_indexed: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: directus_files
+      foreign_key_column: id
+  - collection: site_settings
+    field: timeline_title
+    type: string
+    meta:
+      collection: site_settings
+      conditions: null
+      display: null
+      display_options: null
+      field: timeline_title
+      group: null
+      hidden: false
+      interface: input
+      note: null
+      options: null
+      readonly: false
+      required: false
+      searchable: true
+      sort: 20
+      special: null
+      translations: null
+      validation: null
+      validation_message: null
+      width: full
+    schema:
+      name: timeline_title
+      table: site_settings
+      data_type: character varying
+      default_value: null
+      max_length: 255
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: true
+      is_unique: false
+      is_indexed: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: null
+      foreign_key_column: null
+  - collection: site_settings
+    field: timeline_image
+    type: uuid
+    meta:
+      collection: site_settings
+      conditions: null
+      display: null
+      display_options: null
+      field: timeline_image
+      group: null
+      hidden: false
+      interface: file-image
+      note: null
+      options:
+        folder: a0000000-0000-4000-8000-000000000001
+      readonly: false
+      required: false
+      searchable: true
+      sort: 21
+      special:
+        - file
+      translations: null
+      validation: null
+      validation_message: null
+      width: full
+    schema:
+      name: timeline_image
+      table: site_settings
+      data_type: uuid
+      default_value: null
+      max_length: null
+      numeric_precision: null
+      numeric_scale: null
+      is_nullable: true
+      is_unique: false
+      is_indexed: false
+      is_primary_key: false
+      is_generated: false
+      generation_expression: null
+      has_auto_increment: false
+      foreign_key_table: directus_files
+      foreign_key_column: id
   - collection: subcategories
     field: id
     type: integer
@@ -7540,6 +7664,48 @@ relations:
       foreign_key_table: directus_files
       foreign_key_column: id
       constraint_name: showcase_scenes_image_foreign
+      on_update: NO ACTION
+      on_delete: SET NULL
+  - collection: site_settings
+    field: hero_video
+    related_collection: directus_files
+    meta:
+      junction_field: null
+      many_collection: site_settings
+      many_field: hero_video
+      one_allowed_collections: null
+      one_collection: directus_files
+      one_collection_field: null
+      one_deselect_action: nullify
+      one_field: null
+      sort_field: null
+    schema:
+      table: site_settings
+      column: hero_video
+      foreign_key_table: directus_files
+      foreign_key_column: id
+      constraint_name: site_settings_hero_video_foreign
+      on_update: NO ACTION
+      on_delete: SET NULL
+  - collection: site_settings
+    field: timeline_image
+    related_collection: directus_files
+    meta:
+      junction_field: null
+      many_collection: site_settings
+      many_field: timeline_image
+      one_allowed_collections: null
+      one_collection: directus_files
+      one_collection_field: null
+      one_deselect_action: nullify
+      one_field: null
+      sort_field: null
+    schema:
+      table: site_settings
+      column: timeline_image
+      foreign_key_table: directus_files
+      foreign_key_column: id
+      constraint_name: site_settings_timeline_image_foreign
       on_update: NO ACTION
       on_delete: SET NULL
   - collection: subcategories
