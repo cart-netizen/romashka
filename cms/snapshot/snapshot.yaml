@@ -633,7 +633,8 @@ fields:
       hidden: false
       interface: file-image
       note: null
-      options: null
+      options:
+        folder: a0000000-0000-4000-8000-000000000001
       readonly: false
       required: false
       searchable: true
@@ -1767,7 +1768,8 @@ fields:
       hidden: false
       interface: file-image
       note: null
-      options: null
+      options:
+        folder: a0000000-0000-4000-8000-000000000001
       readonly: false
       required: false
       searchable: true
@@ -2889,7 +2891,8 @@ fields:
       hidden: false
       interface: file-image
       note: null
-      options: null
+      options:
+        folder: a0000000-0000-4000-8000-000000000001
       readonly: false
       required: false
       searchable: true
@@ -3461,7 +3464,8 @@ fields:
       hidden: false
       interface: file-image
       note: null
-      options: null
+      options:
+        folder: a0000000-0000-4000-8000-000000000001
       readonly: false
       required: false
       searchable: true
@@ -3502,7 +3506,8 @@ fields:
       hidden: false
       interface: files
       note: null
-      options: null
+      options:
+        folder: a0000000-0000-4000-8000-000000000001
       readonly: false
       required: false
       searchable: true
@@ -3771,7 +3776,8 @@ fields:
       hidden: false
       interface: files
       note: null
-      options: null
+      options:
+        folder: a0000000-0000-4000-8000-000000000001
       readonly: false
       required: false
       searchable: true
@@ -5376,7 +5382,8 @@ fields:
       hidden: false
       interface: file-image
       note: null
-      options: null
+      options:
+        folder: a0000000-0000-4000-8000-000000000001
       readonly: false
       required: false
       searchable: true

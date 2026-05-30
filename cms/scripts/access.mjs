@@ -8,9 +8,21 @@ import {
   ensureAccess,
   ensurePermission,
   ensureFolder,
+  setUploadFolder,
   PUBLIC_POLICY,
   PUBLIC_FOLDER_ID,
 } from "./lib/client.mjs";
+
+// Файловые поля каталога — загрузка по умолчанию в публичную папку.
+const PUBLIC_FILE_FIELDS = [
+  ["products", "main_image"],
+  ["products", "gallery"],
+  ["products", "dimensions_images"],
+  ["categories", "hero_image"],
+  ["factories", "logo"],
+  ["menu_promos", "image"],
+  ["showcase_scenes", "image"],
+];
 
 const PUBLISHED = { status: { _eq: "published" } };
 const OWN_USER = { _eq: "$CURRENT_USER" };
@@ -41,6 +53,10 @@ async function main() {
 
   // Публичная папка файлов (каталог). Приватные файлы — вне неё.
   await ensureFolder(PUBLIC_FOLDER_ID, "Каталог (публичные файлы)");
+  // Файловые поля каталога загружают в публичную папку по умолчанию
+  for (const [coll, field] of PUBLIC_FILE_FIELDS) {
+    await setUploadFolder(coll, field, PUBLIC_FOLDER_ID);
+  }
 
   // ── Public ──────────────────────────────────────────────────────────────
   console.log("Доступ: Public…");

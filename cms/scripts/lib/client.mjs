@@ -193,6 +193,15 @@ export async function ensureFolder(id, name) {
   return id;
 }
 
+// Задаёт папку загрузки по умолчанию для файлового поля (чтобы фото каталога
+// автоматически попадали в публичную папку и были видны на сайте).
+export async function setUploadFolder(collection, field, folderId) {
+  const f = await tryGet(`/fields/${collection}/${field}`);
+  if (!f) return;
+  const options = { ...(f.meta?.options ?? {}), folder: folderId };
+  await patch(`/fields/${collection}/${field}`, { meta: { options } });
+}
+
 export async function ensureRole(name, def = {}) {
   const found = await get(`/roles?filter[name][_eq]=${encodeURIComponent(name)}&fields=id`);
   if (found?.length) return found[0].id;
