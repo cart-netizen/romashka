@@ -13,13 +13,9 @@ const AREA_SERVED = [
 
 /** Серверный компонент: рендерит <script type="application/ld+json">. */
 export function JsonLd({ data }: { data: object }) {
-  return (
-    <script
-      type="application/ld+json"
-      // данные формируются на сервере из доверенного источника
-      dangerouslySetInnerHTML={{ __html: JSON.stringify(data) }}
-    />
-  );
+  // Экранируем «<», чтобы значения не могли закрыть тег </script> (defense-in-depth).
+  const json = JSON.stringify(data).replace(/</g, "\\u003c");
+  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: json }} />;
 }
 
 export function organizationJsonLd(settings: SiteSettings): object {
