@@ -27,6 +27,11 @@ const nextConfig: NextConfig = {
   images: {
     formats: ["image/avif", "image/webp"],
     dangerouslyAllowLocalIP: isPrivateHost(hostname),
+    // Разрешаем SVG (плейсхолдеры, логотипы фабрик) безопасно:
+    // принудительная загрузка + CSP-песочница без выполнения скриптов.
+    dangerouslyAllowSVG: true,
+    contentDispositionType: "attachment",
+    contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     remotePatterns: [
       {
         protocol: protocol.replace(":", "") as "http" | "https",
