@@ -6301,34 +6301,52 @@ fields:
       foreign_key_table: null
       foreign_key_column: null
   - collection: site_settings
-    field: timeline_image
-    type: uuid
+    field: timeline
+    type: json
     meta:
       collection: site_settings
       conditions: null
       display: null
       display_options: null
-      field: timeline_image
+      field: timeline
       group: null
       hidden: false
-      interface: file-image
+      interface: list
       note: null
       options:
-        folder: a0000000-0000-4000-8000-000000000001
+        fields:
+          - field: year
+            meta:
+              interface: input
+              width: half
+            name: Год
+            type: string
+          - field: title
+            meta:
+              interface: input
+              width: half
+            name: Заголовок
+            type: string
+          - field: text
+            meta:
+              interface: input-multiline
+              width: full
+            name: Описание
+            type: string
       readonly: false
       required: false
       searchable: true
-      sort: 21
+      sort: 22
       special:
-        - file
+        - cast-json
       translations: null
       validation: null
       validation_message: null
       width: full
     schema:
-      name: timeline_image
+      name: timeline
       table: site_settings
-      data_type: uuid
+      data_type: json
       default_value: null
       max_length: null
       numeric_precision: null
@@ -6340,8 +6358,8 @@ fields:
       is_generated: false
       generation_expression: null
       has_auto_increment: false
-      foreign_key_table: directus_files
-      foreign_key_column: id
+      foreign_key_table: null
+      foreign_key_column: null
   - collection: subcategories
     field: id
     type: integer
@@ -7685,27 +7703,6 @@ relations:
       foreign_key_table: directus_files
       foreign_key_column: id
       constraint_name: site_settings_hero_video_foreign
-      on_update: NO ACTION
-      on_delete: SET NULL
-  - collection: site_settings
-    field: timeline_image
-    related_collection: directus_files
-    meta:
-      junction_field: null
-      many_collection: site_settings
-      many_field: timeline_image
-      one_allowed_collections: null
-      one_collection: directus_files
-      one_collection_field: null
-      one_deselect_action: nullify
-      one_field: null
-      sort_field: null
-    schema:
-      table: site_settings
-      column: timeline_image
-      foreign_key_table: directus_files
-      foreign_key_column: id
-      constraint_name: site_settings_timeline_image_foreign
       on_update: NO ACTION
       on_delete: SET NULL
   - collection: subcategories

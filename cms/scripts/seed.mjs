@@ -18,30 +18,6 @@ const placeholderSvg = (label, bg = "#532529") =>
   `<text x="600" y="470" font-family="Georgia, serif" font-size="64" fill="#F5F0E8" text-anchor="middle">${label}</text>` +
   `</svg>`;
 
-// Широкий плейсхолдер таймлайна (история компании 2013 → 2026).
-const timelineSvg = () => {
-  const years = [2013, 2016, 2019, 2022, 2026];
-  const w = 1600;
-  const y = 200;
-  const pts = years
-    .map((yr, i) => {
-      const x = 120 + (i * (w - 240)) / (years.length - 1);
-      return (
-        `<circle cx="${x}" cy="${y}" r="12" fill="#9E5A33"/>` +
-        `<text x="${x}" y="${y - 30}" font-family="Georgia, serif" font-size="34" fill="#221E1A" text-anchor="middle">${yr}</text>` +
-        `<text x="${x}" y="${y + 55}" font-family="Montserrat, sans-serif" font-size="20" fill="#8C8279" text-anchor="middle">этап ${i + 1}</text>`
-      );
-    })
-    .join("");
-  return (
-    `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="400" viewBox="0 0 ${w} 400">` +
-    `<rect width="${w}" height="400" fill="#F5F0E8"/>` +
-    `<line x1="120" y1="${y}" x2="${w - 120}" y2="${y}" stroke="#E3D9CA" stroke-width="4"/>` +
-    pts +
-    `</svg>`
-  );
-};
-
 async function ensureUser(email, data) {
   const found = await get(`/users?filter[email][_eq]=${encodeURIComponent(email)}&fields=id&limit=1`);
   if (found?.length) {
@@ -65,7 +41,6 @@ async function main() {
   const imgMaterial = await ensureUpload("placeholder-material.svg", placeholderSvg("Материал", "#2f5d50"), {
     title: "Плейсхолдер: материал",
   });
-  const imgTimeline = await ensureUpload("placeholder-timeline.svg", timelineSvg(), { title: "Плейсхолдер: таймлайн", ...pub });
 
   console.log("Сиды: site_settings…");
   await updateSingleton("site_settings", {
@@ -79,7 +54,13 @@ async function main() {
     hero_title: "Премиальная мебель для вашего дома",
     hero_subtitle: "Диваны, кровати, кресла и тумбочки от проверенных фабрик. Подбор, доставка и сборка по Сибири.",
     timeline_title: "Наш путь с 2013 года",
-    timeline_image: imgTimeline,
+    timeline: [
+      { year: "2013", title: "Открытие салона", text: "Первый шоурум премиальной мебели в Барнауле." },
+      { year: "2016", title: "Рост ассортимента", text: "Партнёрство с фабриками премиум-сегмента, расширение коллекций." },
+      { year: "2019", title: "Доставка по Сибири", text: "Запустили доставку и профессиональную сборку в регионах." },
+      { year: "2022", title: "Новый шоурум", text: "Расширили экспозицию на проспекте Космонавтов." },
+      { year: "2025", title: "Кабинет дизайнеров", text: "Программа сотрудничества для дизайнеров-партнёров." },
+    ],
     dimensions_disclaimer: "Все изделия измерены вручную. Возможна незначительная погрешность 1–3 см.",
     default_lead_time_note: "Срок изготовления — от 4 недель.",
     promo_amount: 5000,

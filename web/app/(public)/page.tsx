@@ -15,6 +15,8 @@ import {
 } from "@/components/ui/icons";
 import { ProductGrid } from "@/components/catalog/ProductGrid";
 import { InteractiveScene, type SceneData } from "@/components/home/InteractiveScene";
+import { HeroVideo } from "@/components/home/HeroVideo";
+import { Timeline } from "@/components/home/Timeline";
 import {
   assetUrl,
   getCategories,
@@ -49,7 +51,7 @@ export default async function HomePage() {
 
   const heroImage = assetUrl(categories[0]?.hero_image, { width: 1920, height: 1100, fit: "cover" });
   const heroVideo = assetUrl(settings.hero_video); // без трансформаций — отдаём видео как есть
-  const timelineImage = assetUrl(settings.timeline_image, { width: 1600 });
+  const timeline = settings.timeline ?? [];
   const scenes: SceneData[] = scenesRaw.map((s) => ({
     id: s.id,
     title: s.title,
@@ -62,21 +64,10 @@ export default async function HomePage() {
     <>
       {/* Hero */}
       <section className="relative flex min-h-[68vh] items-center overflow-hidden">
-        {heroVideo ? (
-          <video
-            className="absolute inset-0 h-full w-full object-cover"
-            autoPlay
-            muted
-            loop
-            playsInline
-            preload="auto"
-            poster={heroImage ?? undefined}
-          >
-            <source src={heroVideo} />
-          </video>
-        ) : (
-          heroImage && <Image src={heroImage} alt="" fill priority sizes="100vw" className="object-cover" />
-        )}
+        {/* Базовый слой — изображение (на мобильных всегда оно) */}
+        {heroImage && <Image src={heroImage} alt="" fill priority sizes="100vw" className="object-cover" />}
+        {/* Видео — только на десктопе (на мобильных не загружается) */}
+        {heroVideo && <HeroVideo src={heroVideo} poster={heroImage ?? undefined} />}
         <div className="absolute inset-0 bg-gradient-to-r from-ink/70 via-ink/45 to-ink/20" />
         <Container className="relative py-20">
           <p className="text-sm uppercase tracking-[0.3em] text-cream/80">ООО «Ромашка» · Барнаул</p>
@@ -187,20 +178,13 @@ export default async function HomePage() {
         </Container>
       )}
 
-      {/* История компании — таймлайн */}
-      {timelineImage && (
+      {/* История компании — структурированный таймлайн */}
+      {timeline.length > 0 && (
         <section className="bg-surface">
           <Container className="py-20">
             <SectionHeading title={settings.timeline_title ?? "История компании"} subtitle="Развиваемся с 2013 года" />
-            <div className="mt-10 overflow-hidden rounded-[var(--radius-card)]">
-              <Image
-                src={timelineImage}
-                alt={settings.timeline_title ?? "История компании"}
-                width={1600}
-                height={400}
-                sizes="(max-width: 1320px) 100vw, 1320px"
-                className="h-auto w-full object-contain"
-              />
+            <div className="mt-12">
+              <Timeline entries={timeline} />
             </div>
           </Container>
         </section>

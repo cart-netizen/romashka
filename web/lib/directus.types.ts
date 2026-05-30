@@ -115,6 +115,12 @@ export interface Review {
   created_at: string | null;
 }
 
+export interface TimelineEntry {
+  year: string;
+  title: string;
+  text: string;
+}
+
 export interface SiteSettings {
   phone: string | null;
   email: string | null;
@@ -130,7 +136,7 @@ export interface SiteSettings {
   hero_subtitle: string | null;
   hero_video: string | null;
   timeline_title: string | null;
-  timeline_image: string | null;
+  timeline: TimelineEntry[] | null;
   dimensions_disclaimer: string | null;
   default_lead_time_note: string | null;
   promo_amount: number | null;

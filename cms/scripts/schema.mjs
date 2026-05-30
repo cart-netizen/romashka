@@ -277,7 +277,15 @@ async function main() {
   await ensureField("site_settings", "hero_subtitle", text());
   await ensureFile("site_settings", "hero_video", { iface: "file" });
   await ensureField("site_settings", "timeline_title", string());
-  await ensureFile("site_settings", "timeline_image");
+  await ensureField(
+    "site_settings",
+    "timeline",
+    repeater([
+      { field: "year", type: "string", name: "Год", meta: { interface: "input", width: "half" } },
+      { field: "title", type: "string", name: "Заголовок", meta: { interface: "input", width: "half" } },
+      { field: "text", type: "string", name: "Описание", meta: { interface: "input-multiline", width: "full" } },
+    ]),
+  );
   await ensureField("site_settings", "dimensions_disclaimer", text());
   await ensureField("site_settings", "default_lead_time_note", string());
   await ensureField("site_settings", "promo_amount", integer(5000));
