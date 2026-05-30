@@ -3,6 +3,7 @@
 // Designer: read только своих deals, read materials, read/update своего профиля.
 import {
   login,
+  patch,
   ensureRole,
   ensurePolicy,
   ensureAccess,
@@ -50,6 +51,9 @@ const PUBLIC_OPEN = [
 
 async function main() {
   await login();
+
+  // Русский язык интерфейса админки по умолчанию (логин-экран + новые пользователи)
+  await patch("/settings", { default_language: "ru-RU" });
 
   // Публичная папка файлов (каталог). Приватные файлы — вне неё.
   await ensureFolder(PUBLIC_FOLDER_ID, "Каталог (публичные файлы)");
