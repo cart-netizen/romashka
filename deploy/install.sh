@@ -203,7 +203,17 @@ start_stack() {
     fi
     sleep 3
   done
-  die "Directus не поднялся за 180с. Логи: docker compose -p $PROJECT_NAME logs directus"
+  # Частый случай: том Postgres остался от прежнего запуска с другим DB_PASSWORD
+  # (например, после перегенерации секретов) — Directus не может подключиться.
+  if dc logs directus 2>&1 | grep -q "password authentication failed"; then
+    die "Directus не может подключиться к БД: 'password authentication failed'.
+       Том Postgres остался от прежнего запуска с другим паролем (DB_PASSWORD в .env
+       перегенерирован, а БД хранит старый). Очистите БД ТОЛЬКО нашего стека и
+       переустановите (чужие сайты не затрагиваются):
+         docker compose -p $PROJECT_NAME -f $COMPOSE_FILE --env-file .env down -v
+         sudo bash $0 <те же флаги>"
+  fi
+  die "Directus не поднялся за 180с. Логи: docker compose -p $PROJECT_NAME -f $COMPOSE_FILE logs directus"
 }
 
 # ── 5. схема + доступы + (опц.) сиды ─────────────────────────────────────────
