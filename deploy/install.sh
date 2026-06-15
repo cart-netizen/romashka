@@ -52,9 +52,11 @@ PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 ENV_FILE="$SCRIPT_DIR/.env"
 cd "$SCRIPT_DIR"
 
-log()  { printf '\033[1;32m[ ✓ ]\033[0m %s\n' "$*"; }
-info() { printf '\033[1;34m[ i ]\033[0m %s\n' "$*"; }
-warn() { printf '\033[1;33m[ ! ]\033[0m %s\n' "$*"; }
+# Диагностика — ТОЛЬКО в stderr, чтобы не попадать в $(подстановку команд)
+# (напр. write_nginx_conf возвращает путь через stdout).
+log()  { printf '\033[1;32m[ ✓ ]\033[0m %s\n' "$*" >&2; }
+info() { printf '\033[1;34m[ i ]\033[0m %s\n' "$*" >&2; }
+warn() { printf '\033[1;33m[ ! ]\033[0m %s\n' "$*" >&2; }
 die()  { printf '\033[1;31m[ ✗ ]\033[0m %s\n' "$*" >&2; exit 1; }
 
 SUDO=""; [ "$(id -u)" -ne 0 ] && SUDO="sudo"
