@@ -255,96 +255,155 @@ bootstrap_directus() {
   if [ "$WITH_SEED" = 1 ]; then log "Directus инициализирован (с демо-контентом)."; else log "Directus инициализирован."; fi
 }
 
-# ── 6. хостовый nginx ────────────────────────────────────────────────────────
+# ── 6. хостовый nginx (webroot ACME — надёжно за reverse-proxy) ───────────────
+# Общие сниппеты (литералы nginx — quoted heredoc, без shell-подстановки).
+_acme_location() {
+  cat <<'EOF'
+    location ^~ /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+        default_type "text/plain";
+    }
+EOF
+}
+_proxy_headers() {
+  cat <<'EOF'
+        proxy_http_version 1.1;
+        proxy_set_header Host              $host;
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade           $http_upgrade;
+        proxy_set_header Connection        "upgrade";
+EOF
+}
+
+# write_nginx_conf [ssl=0|1] → путь к конфигу (stdout). ssl=1 добавляет 443-блоки
+# и редирект 80→443; ACME-локация присутствует всегда (для выпуска и продления).
 write_nginx_conf() {
+  local ssl="${1:-0}"
   local site_dom cms_dom web_port dir_port out
-  site_dom=$(get_env SITE_URL | sed 's#https\?://##'); cms_dom=$(get_env DIRECTUS_PUBLIC_URL | sed 's#https\?://##')
+  site_dom=$(get_env SITE_URL | sed 's#https\?://##')
+  cms_dom=$(get_env DIRECTUS_PUBLIC_URL | sed 's#https\?://##')
   web_port=$(get_env WEB_PORT); dir_port=$(get_env DIRECTUS_PORT)
   out="$SCRIPT_DIR/nginx-host/$site_dom.conf"
 
-  cat > "$out" <<NGINX
-# Сгенерировано install.sh для ХОСТОВОГО nginx. Сосуществует с другими сайтами.
-# Проксирует домены на локальные порты docker-стека «$PROJECT_NAME».
-# SSL добавит certbot --nginx (или подставьте свои сертификаты).
+  {
+    echo "# Сгенерировано install.sh для ХОСТОВОГО nginx (ssl=$ssl). Сосуществует с другими сайтами."
+    echo "# Проксирует $site_dom / $cms_dom на локальные порты docker-стека «$PROJECT_NAME»."
+    echo
+    # ===== Основной сайт (Next.js) =====
+    echo "server {"
+    echo "    listen 80;"
+    echo "    listen [::]:80;"
+    echo "    server_name $site_dom www.$site_dom;"
+    _acme_location
+    if [ "$ssl" = 1 ]; then
+      echo "    location / { return 301 https://\$host\$request_uri; }"
+      echo "}"
+      echo
+      echo "server {"
+      echo "    listen 443 ssl http2;"
+      echo "    listen [::]:443 ssl http2;"
+      echo "    server_name $site_dom www.$site_dom;"
+      echo "    ssl_certificate     /etc/letsencrypt/live/$site_dom/fullchain.pem;"
+      echo "    ssl_certificate_key /etc/letsencrypt/live/$site_dom/privkey.pem;"
+      echo "    client_max_body_size 25m;"
+      echo "    location / {"
+      echo "        proxy_pass http://127.0.0.1:$web_port;"
+      _proxy_headers
+      echo "    }"
+      echo "}"
+    else
+      echo "    client_max_body_size 25m;"
+      echo "    location / {"
+      echo "        proxy_pass http://127.0.0.1:$web_port;"
+      _proxy_headers
+      echo "    }"
+      echo "}"
+    fi
+    echo
+    # ===== Directus (CMS + /assets) =====
+    echo "server {"
+    echo "    listen 80;"
+    echo "    listen [::]:80;"
+    echo "    server_name $cms_dom;"
+    _acme_location
+    if [ "$ssl" = 1 ]; then
+      echo "    location / { return 301 https://\$host\$request_uri; }"
+      echo "}"
+      echo
+      echo "server {"
+      echo "    listen 443 ssl http2;"
+      echo "    listen [::]:443 ssl http2;"
+      echo "    server_name $cms_dom;"
+      echo "    ssl_certificate     /etc/letsencrypt/live/$site_dom/fullchain.pem;"
+      echo "    ssl_certificate_key /etc/letsencrypt/live/$site_dom/privkey.pem;"
+      echo "    client_max_body_size 512m;"
+      echo "    location / {"
+      echo "        proxy_pass http://127.0.0.1:$dir_port;"
+      _proxy_headers
+      echo "        proxy_read_timeout 600s;"
+      echo "    }"
+      echo "}"
+    else
+      echo "    client_max_body_size 512m;"
+      echo "    location / {"
+      echo "        proxy_pass http://127.0.0.1:$dir_port;"
+      _proxy_headers
+      echo "        proxy_read_timeout 600s;"
+      echo "    }"
+      echo "}"
+    fi
+  } > "$out"
 
-# --- Основной сайт (Next.js) ---
-server {
-    listen 80;
-    listen [::]:80;
-    server_name $site_dom www.$site_dom;
-
-    client_max_body_size 25m;
-
-    location / {
-        proxy_pass http://127.0.0.1:$web_port;
-        proxy_http_version 1.1;
-        proxy_set_header Host              \$host;
-        proxy_set_header X-Real-IP         \$remote_addr;
-        proxy_set_header X-Forwarded-For   \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_set_header Upgrade           \$http_upgrade;
-        proxy_set_header Connection        "upgrade";
-    }
-}
-
-# --- Directus (CMS + файлы /assets) ---
-server {
-    listen 80;
-    listen [::]:80;
-    server_name $cms_dom;
-
-    # большие загрузки фото/видео из админки
-    client_max_body_size 512m;
-
-    location / {
-        proxy_pass http://127.0.0.1:$dir_port;
-        proxy_http_version 1.1;
-        proxy_set_header Host              \$host;
-        proxy_set_header X-Real-IP         \$remote_addr;
-        proxy_set_header X-Forwarded-For   \$proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto \$scheme;
-        proxy_set_header Upgrade           \$http_upgrade;   # websockets (realtime)
-        proxy_set_header Connection        "upgrade";
-        proxy_read_timeout 600s;                              # длинные загрузки
-    }
-}
-NGINX
-  log "Конфиг nginx: $out"
+  log "Конфиг nginx (ssl=$ssl): $out"
   echo "$out"
 }
 
-install_nginx() {
-  local conf="$1" site_dom cms_dom
-  site_dom=$(get_env SITE_URL | sed 's#https\?://##'); cms_dom=$(get_env DIRECTUS_PUBLIC_URL | sed 's#https\?://##')
-  command -v nginx >/dev/null || die "На хосте нет nginx. Уберите --with-nginx или установите nginx."
-
+# скопировать конфиг в активную папку nginx + проверить + перезагрузить
+_install_conf() {
+  local conf="$1" site_dom="$2"
   if [ -d /etc/nginx/sites-available ]; then
     $SUDO cp "$conf" "/etc/nginx/sites-available/$site_dom.conf"
     $SUDO ln -sf "/etc/nginx/sites-available/$site_dom.conf" "/etc/nginx/sites-enabled/$site_dom.conf"
   else
     $SUDO cp "$conf" "/etc/nginx/conf.d/$site_dom.conf"
   fi
-  info "Проверяю конфигурацию nginx (nginx -t) — не тронет другие сайты…"
-  $SUDO nginx -t || die "nginx -t не прошёл. Файл не активирован корректно — проверьте вручную."
+  $SUDO nginx -t || die "nginx -t не прошёл — конфиг не активирован, проверьте вручную."
   $SUDO systemctl reload nginx || $SUDO nginx -s reload
-  log "Хостовый nginx перезагружен."
+}
 
-  if [ "$WITH_SSL" = 1 ]; then
-    # certbot + nginx-плагин (без плагина '--nginx' не работает)
-    if ! command -v certbot >/dev/null; then
-      info "Ставлю certbot + nginx-плагин…"
-      $SUDO apt-get update -qq && $SUDO apt-get install -y -qq certbot python3-certbot-nginx \
-        || die "Не удалось установить certbot. Установите вручную: apt install certbot python3-certbot-nginx"
-    elif ! $SUDO certbot plugins 2>/dev/null | grep -q nginx; then
-      info "Доставляю nginx-плагин certbot…"
-      $SUDO apt-get update -qq && $SUDO apt-get install -y -qq python3-certbot-nginx \
-        || warn "Не удалось доставить python3-certbot-nginx — выпустите сертификат вручную после установки плагина."
-    fi
-    info "Выпускаю SSL (Let's Encrypt) для доменов…"
-    $SUDO certbot --nginx --non-interactive --agree-tos \
-      -m "$(get_env ADMIN_EMAIL)" --redirect \
-      -d "$site_dom" -d "www.$site_dom" -d "$cms_dom" \
-      || warn "certbot не смог выпустить сертификат — проверьте: (1) установлен ли nginx-плагин, (2) A-записи доменов резолвятся на этот сервер (dig +short $site_dom www.$site_dom $cms_dom)."
+install_nginx() {
+  local site_dom cms_dom conf
+  site_dom=$(get_env SITE_URL | sed 's#https\?://##')
+  cms_dom=$(get_env DIRECTUS_PUBLIC_URL | sed 's#https\?://##')
+  command -v nginx >/dev/null || die "На хосте нет nginx. Уберите --with-nginx или установите nginx."
+  $SUDO mkdir -p /var/www/certbot
+
+  # Фаза 1 — HTTP-конфиг (с ACME-локацией): сайт открывается, челлендж готов.
+  info "Ставлю HTTP-конфиг в хостовый nginx (nginx -t перед reload — чужие сайты не тронем)…"
+  conf=$(write_nginx_conf 0)
+  _install_conf "$conf" "$site_dom"
+  log "Хостовый nginx перезагружен (HTTP)."
+
+  [ "$WITH_SSL" = 1 ] || return 0
+
+  if ! command -v certbot >/dev/null; then
+    info "Ставлю certbot…"
+    $SUDO apt-get update -qq && $SUDO apt-get install -y -qq certbot \
+      || die "Не удалось установить certbot. Установите вручную: apt install certbot"
+  fi
+  info "Выпускаю SSL (Let's Encrypt, webroot)…"
+  if $SUDO certbot certonly --webroot -w /var/www/certbot --non-interactive --agree-tos \
+       -m "$(get_env ADMIN_EMAIL)" --cert-name "$site_dom" \
+       --deploy-hook "systemctl reload nginx" \
+       -d "$site_dom" -d "www.$site_dom" -d "$cms_dom"; then
+    info "Включаю HTTPS-блоки (редирект 80→443)…"
+    conf=$(write_nginx_conf 1)
+    _install_conf "$conf" "$site_dom"
+    log "SSL выпущен, HTTPS включён."
+  else
+    warn "certbot не выпустил сертификат — сайт работает по HTTP. Проверьте, что снаружи доступен http://$site_dom/.well-known/acme-challenge/ и DNS трёх имён ($site_dom, www.$site_dom, $cms_dom) указывает на этот сервер."
   fi
 }
 
@@ -396,7 +455,7 @@ summary() {
     echo "    sudo cp $nginx_conf /etc/nginx/sites-available/"
     echo "    sudo ln -s /etc/nginx/sites-available/$(basename "$nginx_conf") /etc/nginx/sites-enabled/"
     echo "    sudo nginx -t && sudo systemctl reload nginx"
-    echo "    sudo certbot --nginx -d <домены>"
+    echo "    sudo mkdir -p /var/www/certbot && sudo certbot certonly --webroot -w /var/www/certbot -d <домены>"
   fi
   echo "  Управление:  docker compose -p $PROJECT_NAME -f $COMPOSE_FILE logs -f"
   if [ "$NO_CRON" = 1 ]; then
@@ -424,8 +483,11 @@ main() {
   start_stack
   bootstrap_directus
   local conf=""
-  conf=$(write_nginx_conf)
-  [ "$WITH_NGINX" = 1 ] && install_nginx "$conf"
+  if [ "$WITH_NGINX" = 1 ]; then
+    install_nginx
+  else
+    conf=$(write_nginx_conf 0)   # http-конфиг для ручного подключения
+  fi
   setup_cron_and_autostart
   summary "$conf"
 }
