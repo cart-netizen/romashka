@@ -287,14 +287,31 @@ write_nginx_conf() {
   web_port=$(get_env WEB_PORT); dir_port=$(get_env DIRECTUS_PORT)
   out="$SCRIPT_DIR/nginx-host/$site_dom.conf"
 
+  # Если на сервере панель/другой сайт биндит конкретный IP (listen <IP>:80),
+  # такой сокет приоритетнее wildcard 'listen 80' — наши server_name тогда не
+  # рассматриваются. Поэтому биндим наши блоки на тот же конкретный IP сервера.
+  local host_ip l80 l443
+  host_ip="${HOST_IP:-$(get_env HOST_IP)}"
+  [ -z "$host_ip" ] && host_ip=$(ip -4 route get 1.1.1.1 2>/dev/null | awk '{for(i=1;i<=NF;i++) if($i=="src"){print $(i+1); exit}}')
+  case "$host_ip" in *.*.*.*) ;; *) host_ip="" ;; esac   # только валидный IPv4
+  if [ -n "$host_ip" ]; then
+    l80="listen $host_ip:80;"
+    l443="listen $host_ip:443 ssl;"
+  else
+    l80="listen 80;
+    listen [::]:80;"
+    l443="listen 443 ssl;
+    listen [::]:443 ssl;"
+  fi
+
   {
     echo "# Сгенерировано install.sh для ХОСТОВОГО nginx (ssl=$ssl). Сосуществует с другими сайтами."
+    [ -n "$host_ip" ] && echo "# Биндим на конкретный IP $host_ip (как соседняя панель/сайт), иначе wildcard."
     echo "# Проксирует $site_dom / $cms_dom на локальные порты docker-стека «$PROJECT_NAME»."
     echo
     # ===== Основной сайт (Next.js) =====
     echo "server {"
-    echo "    listen 80;"
-    echo "    listen [::]:80;"
+    echo "    $l80"
     echo "    server_name $site_dom www.$site_dom;"
     _acme_location
     if [ "$ssl" = 1 ]; then
@@ -302,8 +319,7 @@ write_nginx_conf() {
       echo "}"
       echo
       echo "server {"
-      echo "    listen 443 ssl http2;"
-      echo "    listen [::]:443 ssl http2;"
+      echo "    $l443"
       echo "    server_name $site_dom www.$site_dom;"
       echo "    ssl_certificate     /etc/letsencrypt/live/$site_dom/fullchain.pem;"
       echo "    ssl_certificate_key /etc/letsencrypt/live/$site_dom/privkey.pem;"
@@ -324,8 +340,7 @@ write_nginx_conf() {
     echo
     # ===== Directus (CMS + /assets) =====
     echo "server {"
-    echo "    listen 80;"
-    echo "    listen [::]:80;"
+    echo "    $l80"
     echo "    server_name $cms_dom;"
     _acme_location
     if [ "$ssl" = 1 ]; then
@@ -333,8 +348,7 @@ write_nginx_conf() {
       echo "}"
       echo
       echo "server {"
-      echo "    listen 443 ssl http2;"
-      echo "    listen [::]:443 ssl http2;"
+      echo "    $l443"
       echo "    server_name $cms_dom;"
       echo "    ssl_certificate     /etc/letsencrypt/live/$site_dom/fullchain.pem;"
       echo "    ssl_certificate_key /etc/letsencrypt/live/$site_dom/privkey.pem;"
