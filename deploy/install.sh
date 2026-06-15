@@ -339,6 +339,14 @@ summary() {
   fi
   echo "  Автозапуск:  стек поднимается после ребута (docker enabled + restart:always)"
   echo "  Наполнение:  docs/CONTENT_GUIDE.md"
+  echo "──────────────────────────────────────────────────────────────────────"
+  warn "ОБЯЗАТЕЛЬНЫЙ ручной шаг — сервисный токен Directus (иначе лиды/подписки"
+  warn "пишутся через ограниченную public-роль, без промо-полей):"
+  echo "    1. Войдите в $(get_env DIRECTUS_PUBLIC_URL)/admin"
+  echo "    2. Создайте сервис-пользователя (НЕ админ): create leads+subscribers, read subscribers"
+  echo "    3. Сгенерируйте ему статический Token, впишите в DIRECTUS_ADMIN_TOKEN в deploy/.env"
+  echo "    4. Примените: docker compose -p $PROJECT_NAME -f $COMPOSE_FILE --env-file .env up -d web"
+  echo "    Подробно: docs/DEPLOY_RUNBOOK.md (шаг 4)"
 }
 
 # ── main ─────────────────────────────────────────────────────────────────────

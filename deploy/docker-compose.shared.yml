@@ -63,6 +63,7 @@ services:
       args:
         NEXT_PUBLIC_SITE_URL: ${SITE_URL}
         NEXT_PUBLIC_DIRECTUS_URL: ${DIRECTUS_PUBLIC_URL}
+        NEXT_PUBLIC_YANDEX_METRICA_ID: ${NEXT_PUBLIC_YANDEX_METRICA_ID}
     restart: always
     # Слушает только localhost хоста — проксирует хостовый nginx на основной домен.
     ports:

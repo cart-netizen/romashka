@@ -11,26 +11,51 @@ export function hasAdminToken(): boolean {
   return ADMIN_TOKEN.length > 0;
 }
 
-async function write<T>(
-  path: string,
-  method: "POST" | "PATCH",
-  body: object,
-  { auth = true }: { auth?: boolean } = {},
-): Promise<T> {
+const isAuthError = (status: number) => status === 401 || status === 403;
+
+interface RawResult {
+  ok: boolean;
+  status: number;
+  data: unknown;
+  detail: string;
+}
+
+async function rawWrite(path: string, method: "POST" | "PATCH", body: object, auth: boolean): Promise<RawResult> {
   const headers: Record<string, string> = { "Content-Type": "application/json" };
   if (auth && ADMIN_TOKEN) headers.Authorization = `Bearer ${ADMIN_TOKEN}`;
-  const res = await fetch(`${DIRECTUS_URL}${path}`, {
-    method,
-    headers,
-    body: JSON.stringify(body),
-    cache: "no-store",
-  });
+  const res = await fetch(`${DIRECTUS_URL}${path}`, { method, headers, body: JSON.stringify(body), cache: "no-store" });
   const text = await res.text();
   const json = text ? JSON.parse(text) : null;
-  if (!res.ok) {
-    throw new Error(`Directus write ${path} → ${res.status}: ${json?.errors ? JSON.stringify(json.errors) : text}`);
+  return { ok: res.ok, status: res.status, data: json?.data ?? null, detail: json?.errors ? JSON.stringify(json.errors) : text };
+}
+
+/**
+ * Запись с устойчивостью к невалидному токену. Если токен задан — пишем
+ * авторизованно (полные поля); при ошибке авторизации (401/403) НЕ теряем
+ * запись, а повторяем публичным create с урезанным телом (`publicBody`).
+ * Без токена сразу пишем публично. Возвращает viaPublic — упали ли в фолбэк.
+ */
+async function writeResilient<T>(
+  path: string,
+  method: "POST" | "PATCH",
+  authedBody: object,
+  publicBody: object,
+): Promise<{ data: T | null; viaPublic: boolean }> {
+  if (ADMIN_TOKEN) {
+    const r = await rawWrite(path, method, authedBody, true);
+    if (r.ok) return { data: r.data as T, viaPublic: false };
+    if (!isAuthError(r.status)) {
+      throw new Error(`Directus write ${path} → ${r.status}: ${r.detail}`);
+    }
+    console.warn(
+      `[directus-write] авторизация отклонена (${r.status}) на ${path} — фолбэк на публичную запись. Проверьте DIRECTUS_ADMIN_TOKEN (токен должен быть привязан к пользователю Directus).`,
+    );
   }
-  return (json?.data ?? null) as T;
+  const pub = await rawWrite(path, method, publicBody, false);
+  if (!pub.ok) {
+    throw new Error(`Directus write ${path} (public) → ${pub.status}: ${pub.detail}`);
+  }
+  return { data: pub.data as T, viaPublic: true };
 }
 
 export interface LeadRecord {
@@ -45,7 +70,8 @@ export interface LeadRecord {
 }
 
 export async function createLead(data: LeadRecord): Promise<void> {
-  await write("/items/leads", "POST", data);
+  // Поля лида разрешены публичной роли — фолбэк-тело совпадает с авторизованным.
+  await writeResilient("/items/leads", "POST", data, data);
 }
 
 export interface SubscriberRecord {
@@ -58,13 +84,17 @@ export interface SubscriberRecord {
   promo_status?: "issued" | "redeemed";
 }
 
-export async function createSubscriber(data: SubscriberRecord): Promise<{ id: number | null }> {
-  // Промо-поля публичной роли недоступны — без токена пишем только базовые поля.
-  const payload: object = ADMIN_TOKEN
-    ? data
-    : { contact: data.contact, consent: data.consent, source_page: data.source_page };
-  const result = await write<{ id: number } | null>("/items/subscribers", "POST", payload);
-  return { id: result?.id ?? null };
+export async function createSubscriber(data: SubscriberRecord): Promise<{ id: number | null; viaPublic: boolean }> {
+  // Промо-поля доступны только по токену. Публичное тело (фолбэк при невалидном
+  // токене и путь без токена) — только базовые поля, разрешённые public-роли.
+  const publicBody = { contact: data.contact, consent: data.consent, source_page: data.source_page };
+  const { data: result, viaPublic } = await writeResilient<{ id: number } | null>(
+    "/items/subscribers",
+    "POST",
+    data,
+    publicBody,
+  );
+  return { id: result?.id ?? null, viaPublic };
 }
 
 /** Проверка занятости промокода (только при наличии токена; иначе считаем свободным). */
