@@ -198,3 +198,15 @@ docker compose -p romashka -f docker-compose.shared.yml --env-file .env up -d --
 | 6 | ✅ исправлено | `NEXT_PUBLIC_YANDEX_METRICA_ID` добавлен в `build.args` обоих compose и в `web/Dockerfile` | Задать `NEXT_PUBLIC_YANDEX_METRICA_ID` в `deploy/.env` **до** сборки; меняете позже — `up -d --build web` |
 
 Не-проблемы (проверено, действий не требуют): путь снапшота и идемпотентность; сеть `romashka_default` и `npm install` для bootstrap (в `cms` нет зависимостей); права папок при штатном `install.sh`.
+
+---
+
+## 10. Траблшутинг
+
+**`failed to bind host port 127.0.0.1:8080: address already in use`** — порт занят другим docker-сайтом. Установщик теперь **сам сдвигает** порт вверх до свободного (всегда проверяет занятость, не только при пустом значении). Действия: `cd /opt/romashka && git pull && cd deploy && sudo bash install.sh --with-nginx` — порт пересчитается, web поднимется. Узнать, кто занял порт: `sudo ss -ltnp | grep :8080`. Реальные выбранные порты — в `deploy/.env` (`WEB_PORT`, `DIRECTUS_PORT`); хостовый nginx-конфиг `deploy/nginx-host/paleron.ru.conf` генерируется уже под них.
+
+**`502 Bad Gateway` от хостового nginx** — стек не поднят или порт в nginx-конфиге не совпадает с `.env`. Проверить: `docker compose -p romashka -f docker-compose.shared.yml ps` и сверить `WEB_PORT`/`DIRECTUS_PORT` в `deploy/.env` с `proxy_pass` в активном конфиге nginx.
+
+**Заявки/подписки не приходят** — проверить сервисный токен (шаг 4): при невалидном токене запись сохраняется, но без промо-полей и в логах web будет `[directus-write] авторизация отклонена`.
+
+**Postgres вашего другого сайта не затрагивается** — наш Postgres изолирован: отдельный контейнер в проекте `romashka`, свой том `db_data`, наружу порт не публикуется. Конфликтовать может только публикуемый порт web/Directus (решается авто-сдвигом выше).

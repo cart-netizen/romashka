@@ -91,13 +91,27 @@ set_env() {
 # заполнить KEY, только если пусто/отсутствует
 fill_if_empty() { local cur; cur=$(get_env "$1"); [ -z "$cur" ] && set_env "$1" "$2" || true; }
 
+# занят ли localhost-порт (учёт чужих docker-сайтов и любых слушателей)
+port_in_use() {
+  local p="$1"
+  if command -v ss >/dev/null 2>&1; then
+    # любой listener на этом порту (0.0.0.0:p, 127.0.0.1:p, [::]:p, *:p)
+    ss -ltnH 2>/dev/null | awk '{print $4}' | grep -qE "[:.]$p\$" && return 0
+    return 1
+  fi
+  # фолбэк без ss: проба коннекта (docker-proxy/любой listener примет соединение)
+  (exec 3<>"/dev/tcp/127.0.0.1/$p") 2>/dev/null && { exec 3>&- 3<&-; return 0; }
+  return 1
+}
+
 # свободный localhost-порт начиная с базового (учёт чужих сервисов)
 pick_port() {
-  local p="$1"
-  while ss -ltnH 2>/dev/null | awk '{print $4}' | grep -qE "[:.]$p\$"; do
+  local p="$1" max=$(( $1 + 500 ))
+  while [ "$p" -lt "$max" ]; do
+    port_in_use "$p" || { echo "$p"; return 0; }
     p=$((p+1))
   done
-  echo "$p"
+  echo "$1"  # крайний случай: всё занято — вернём базовый
 }
 
 # ── 2. .env ──────────────────────────────────────────────────────────────────
@@ -125,10 +139,14 @@ prepare_env() {
   fill_if_empty ADMIN_PASSWORD       "$(openssl rand -base64 18 | tr -d '/+=')"
   fill_if_empty DIRECTUS_ADMIN_TOKEN "$(openssl rand -hex 32)"
 
-  # порты для localhost (свободные, чтобы не пересечься с чужими сервисами)
+  # порты для localhost: ВСЕГДА проверяем занятость (на сервере с другими
+  # сайтами дефолт из .env.example может быть занят чужим docker-контейнером).
   local web_port dir_port
-  web_port=$(get_env WEB_PORT);      [ -z "$web_port" ] && web_port=$(pick_port 8080)
-  dir_port=$(get_env DIRECTUS_PORT); [ -z "$dir_port" ] && dir_port=$(pick_port 8055)
+  web_port=$(get_env WEB_PORT);      [ -z "$web_port" ] && web_port=8080
+  dir_port=$(get_env DIRECTUS_PORT); [ -z "$dir_port" ] && dir_port=8055
+  web_port=$(pick_port "$web_port")
+  dir_port=$(pick_port "$dir_port")
+  [ "$dir_port" = "$web_port" ] && dir_port=$(pick_port $((web_port + 1)))
   set_env WEB_PORT "$web_port"
   set_env DIRECTUS_PORT "$dir_port"
 
