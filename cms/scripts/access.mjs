@@ -24,6 +24,7 @@ const PUBLIC_FILE_FIELDS = [
   ["menu_promos", "image"],
   ["showcase_scenes", "image"],
   ["site_settings", "hero_video"],
+  ["site_settings", "about_image"],
   ["colors", "swatch_image"],
   ["product_sizes", "image"],
   ["product_sizes", "dimensions_image"],

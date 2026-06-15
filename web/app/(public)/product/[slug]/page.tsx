@@ -177,7 +177,7 @@ export default async function ProductPage({ params }: { params: Promise<{ slug: 
       />
       <JsonLd data={breadcrumbJsonLd(crumbs.map((c) => ({ name: c.label, url: c.href })))} />
       <SizeVariantProvider variants={variantViews}>
-      <div className="bg-white">
+      <div className="bg-white font-serif">
         <Container className="py-8">
           <Breadcrumbs items={crumbs} />
 

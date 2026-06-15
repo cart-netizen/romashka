@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Montserrat } from "next/font/google";
+import { Playfair_Display, Montserrat, Tenor_Sans } from "next/font/google";
 import "./globals.css";
 import { CookieBanner } from "@/components/CookieBanner";
 import { YandexMetrica } from "@/components/analytics/YandexMetrica";
@@ -12,6 +12,14 @@ const playfair = Playfair_Display({
 
 const montserrat = Montserrat({
   variable: "--font-montserrat",
+  subsets: ["latin", "cyrillic"],
+  display: "swap",
+});
+
+// Tenor Sans — для цен (как на референсе)
+const tenorSans = Tenor_Sans({
+  variable: "--font-tenor-sans",
+  weight: "400",
   subsets: ["latin", "cyrillic"],
   display: "swap",
 });
@@ -47,7 +55,7 @@ export default function RootLayout({
   return (
     <html
       lang="ru"
-      className={`${playfair.variable} ${montserrat.variable} h-full antialiased`}
+      className={`${playfair.variable} ${montserrat.variable} ${tenorSans.variable} h-full antialiased`}
     >
       <body className="flex min-h-full flex-col">
         <link rel="preconnect" href={ASSET_HOST} />

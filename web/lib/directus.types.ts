@@ -149,6 +149,7 @@ export interface SiteSettings {
   hero_title: string | null;
   hero_subtitle: string | null;
   hero_video: string | null;
+  about_image: string | null;
   timeline_title: string | null;
   timeline: TimelineEntry[] | null;
   dimensions_disclaimer: string | null;

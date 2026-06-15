@@ -21,6 +21,7 @@
   --font-serif: var(--font-playfair-display), Georgia, "Times New Roman", serif;
   --font-sans:
     var(--font-montserrat), system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-price: var(--font-tenor-sans), "Tenor Sans", Georgia, serif;
 
   /* Скругления / тени */
   --radius-card: 2px;
@@ -30,7 +31,8 @@
 body {
   background-color: var(--color-cream);
   color: var(--color-ink);
-  font-family: var(--font-sans);
+  /* Референс: основной шрифт сайта — Playfair Display (serif) */
+  font-family: var(--font-serif);
   font-size: 15px;
   line-height: 1.6;
 }

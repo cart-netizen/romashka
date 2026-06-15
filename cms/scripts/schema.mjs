@@ -305,6 +305,7 @@ async function main() {
   await ensureField("site_settings", "hero_title", string());
   await ensureField("site_settings", "hero_subtitle", text());
   await ensureFile("site_settings", "hero_video", { iface: "file" });
+  await ensureFile("site_settings", "about_image");
   await ensureField("site_settings", "timeline_title", string());
   await ensureField(
     "site_settings",

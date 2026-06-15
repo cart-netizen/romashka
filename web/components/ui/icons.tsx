@@ -152,3 +152,11 @@ export const CardIcon = (p: IconProps) => (
     <path d="M3 10h18M7 15h4" />
   </Svg>
 );
+
+export const BankIcon = (p: IconProps) => (
+  <Svg {...p}>
+    <path d="M3 9.5 12 4l9 5.5" />
+    <path d="M4 10v8M9 10v8M15 10v8M20 10v8" />
+    <path d="M3 21h18" />
+  </Svg>
+);

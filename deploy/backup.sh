@@ -6,7 +6,10 @@ set -euo pipefail
 
 BACKUP_DIR="${BACKUP_DIR:-./backups}"
 RETENTION_DAYS="${RETENTION_DAYS:-14}"
-COMPOSE="docker compose -f docker-compose.prod.yml"
+# Совместимо с обоими режимами: prod (свой nginx) и shared (общий хост-nginx).
+# Переопределяется через env: COMPOSE_FILE, COMPOSE_PROJECT_NAME.
+COMPOSE_FILE="${COMPOSE_FILE:-docker-compose.prod.yml}"
+COMPOSE="docker compose ${COMPOSE_PROJECT_NAME:+-p $COMPOSE_PROJECT_NAME} -f $COMPOSE_FILE"
 STAMP="$(date +%Y%m%d-%H%M%S)"
 
 mkdir -p "$BACKUP_DIR"

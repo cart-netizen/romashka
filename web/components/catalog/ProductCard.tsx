@@ -74,7 +74,7 @@ export function ProductCard({ product }: { product: Product }) {
             </div>
           )}
 
-          <p className="mt-3 font-serif text-xl text-ink">{formatPriceFrom(product.price_from)}</p>
+          <p className="mt-3 font-price text-xl text-ink">{formatPriceFrom(product.price_from)}</p>
         </div>
       </Link>
     </article>

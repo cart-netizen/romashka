@@ -1,0 +1,92 @@
+# Прод-стек для сервера, где УЖЕ ЕСТЬ другие сайты (общий хостовый nginx).
+# Свой nginx НЕ поднимаем (порты 80/443 заняты чужим nginx).
+# web и Directus слушают ТОЛЬКО 127.0.0.1 на отдельных портах — наружу их
+# проксирует существующий nginx хоста (см. install.sh → deploy/nginx-host/).
+# Запуск: только через ./install.sh (он подставит .env, права и порты).
+#
+#   docker compose -p romashka -f docker-compose.shared.yml --env-file .env up -d --build
+#
+# Postgres наружу не публикуется вообще.
+
+services:
+  database:
+    image: postgis/postgis:16-3.4-alpine
+    restart: always
+    volumes:
+      - db_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_DATABASE}
+    healthcheck:
+      test: ["CMD", "pg_isready", "--host=localhost", "--username=${DB_USER}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  directus:
+    image: directus/directus:11
+    restart: always
+    # Слушает только localhost хоста — проксирует хостовый nginx на CMS-домен.
+    ports:
+      - "127.0.0.1:${DIRECTUS_PORT}:8055"
+    volumes:
+      - ./directus/uploads:/directus/uploads
+      - ./directus/extensions:/directus/extensions
+      - ./directus/snapshot:/directus/snapshot
+    depends_on:
+      database:
+        condition: service_healthy
+    environment:
+      KEY: ${DIRECTUS_KEY}
+      SECRET: ${DIRECTUS_SECRET}
+      DB_CLIENT: pg
+      DB_HOST: database
+      DB_PORT: "5432"
+      DB_DATABASE: ${DB_DATABASE}
+      DB_USER: ${DB_USER}
+      DB_PASSWORD: ${DB_PASSWORD}
+      ADMIN_EMAIL: ${ADMIN_EMAIL}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      PUBLIC_URL: ${DIRECTUS_PUBLIC_URL}
+      WEBSOCKETS_ENABLED: "true"
+      CORS_ENABLED: "true"
+      CORS_ORIGIN: ${SITE_URL}
+      # За реверс-прокси — доверяем заголовкам X-Forwarded-*
+      IP_TRUST_PROXY: "true"
+
+  web:
+    build:
+      context: ../web
+      dockerfile: Dockerfile
+      args:
+        NEXT_PUBLIC_SITE_URL: ${SITE_URL}
+        NEXT_PUBLIC_DIRECTUS_URL: ${DIRECTUS_PUBLIC_URL}
+    restart: always
+    # Слушает только localhost хоста — проксирует хостовый nginx на основной домен.
+    ports:
+      - "127.0.0.1:${WEB_PORT}:3000"
+    depends_on:
+      - directus
+    environment:
+      NODE_ENV: production
+      NEXT_PUBLIC_SITE_URL: ${SITE_URL}
+      DIRECTUS_URL: http://directus:8055
+      NEXT_PUBLIC_DIRECTUS_URL: ${DIRECTUS_PUBLIC_URL}
+      DIRECTUS_ADMIN_TOKEN: ${DIRECTUS_ADMIN_TOKEN}
+      MAX_BOT_TOKEN: ${MAX_BOT_TOKEN}
+      MAX_ADMIN_CHAT_ID: ${MAX_ADMIN_CHAT_ID}
+      MAX_API_BASE: ${MAX_API_BASE}
+      MAX_NOTIFY_TOKEN: ${MAX_NOTIFY_TOKEN}
+      MAX_NOTIFY_SENDER: ${MAX_NOTIFY_SENDER}
+      SMTP_HOST: ${SMTP_HOST}
+      SMTP_PORT: ${SMTP_PORT}
+      SMTP_USER: ${SMTP_USER}
+      SMTP_PASS: ${SMTP_PASS}
+      LEAD_EMAIL_TO: ${LEAD_EMAIL_TO}
+      NEXT_PUBLIC_YANDEX_METRICA_ID: ${NEXT_PUBLIC_YANDEX_METRICA_ID}
+      YANDEX_WEBMASTER_VERIFICATION: ${YANDEX_WEBMASTER_VERIFICATION}
+
+volumes:
+  db_data:

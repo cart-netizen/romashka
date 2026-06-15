@@ -42,6 +42,9 @@ yarn-error.log*
 coverage/
 .eslintcache
 
+# --- Локальный конфиг Claude Code / агента ---
+.claude/
+
 # --- OS / editor junk ---
 .DS_Store
 Thumbs.db

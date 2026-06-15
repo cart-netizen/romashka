@@ -6,6 +6,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import {
   ArrowRightIcon,
+  BankIcon,
   CardIcon,
   ShieldIcon,
   StoreIcon,
@@ -17,6 +18,7 @@ import { ProductGrid } from "@/components/catalog/ProductGrid";
 import { InteractiveScene, type SceneData } from "@/components/home/InteractiveScene";
 import { HeroVideo } from "@/components/home/HeroVideo";
 import { Timeline } from "@/components/home/Timeline";
+import { DeliveryCarousel } from "@/components/home/DeliveryCarousel";
 import {
   assetUrl,
   getCategories,
@@ -52,6 +54,15 @@ export default async function HomePage() {
   const heroImage = assetUrl(categories[0]?.hero_image, { width: 1920, height: 1100, fit: "cover" });
   const heroVideo = assetUrl(settings.hero_video); // без трансформаций — отдаём видео как есть
   const timeline = settings.timeline ?? [];
+  const aboutImage =
+    assetUrl(settings.about_image, { width: 1000, height: 820, fit: "cover" }) ??
+    assetUrl(scenesRaw[0]?.image, { width: 1000, height: 820, fit: "cover" }) ??
+    assetUrl(categories[1]?.hero_image ?? categories[0]?.hero_image, { width: 1000, height: 820, fit: "cover" });
+  const deliveryParagraphs = [
+    "Мы сделаем всё возможное, чтобы доставка вашей мебели прошла гладко и без стресса. Наш опытный персонал обеспечит аккуратную транспортировку, поможет поднять покупку на этаж и, если потребуется, профессионально соберёт её.",
+    "При доставке наши специалисты внимательно осматривают каждую деталь, чтобы убедиться в отсутствии дефектов и сохранить идеальное качество. Если потребуется, мы поможем установить мебель на место и убедимся, что всё выглядит безукоризненно.",
+    "Наши сборщики работают аккуратно и с уважением к вашему дому. Все элементы подгоняются точно, крепления проверяются, а пространство остаётся чистым и опрятным. Ваша мебель сразу готова к использованию — красиво, надёжно и без лишних хлопот.",
+  ];
   const scenes: SceneData[] = scenesRaw.map((s) => ({
     id: s.id,
     title: s.title,
@@ -178,6 +189,47 @@ export default async function HomePage() {
         </Container>
       )}
 
+      {/* О нас — текст слева, фото интерьера справа (общий фон) */}
+      <Container className="py-20">
+        <div className="grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
+          <div>
+            <h2 className="text-3xl sm:text-4xl">О нас</h2>
+            <p className="mt-6 max-w-xl text-muted">
+              Мы — профессионалы, вдохновлённые созданием идеальной мебели для вашего дома. Сочетая стиль,
+              функциональность и качество, мы стремимся сделать каждый интерьер уникальным и комфортным.
+            </p>
+            <p className="mt-8 font-serif text-lg text-ink">Мы предлагаем:</p>
+            <ul className="mt-5 space-y-5">
+              {[
+                { n: 1, title: "Мягкую мебель", text: "Кресла, пуфы, диваны, стулья с мягкой обшивкой" },
+                { n: 2, title: "Функциональность и стиль", text: "Стильные и практичные решения для вашего дома" },
+              ].map((it) => (
+                <li key={it.n} className="flex gap-4">
+                  <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-terracotta font-serif text-terracotta">
+                    {it.n}
+                  </span>
+                  <div>
+                    <h3 className="font-serif text-lg text-ink">{it.title}</h3>
+                    <p className="mt-1 text-sm text-muted">{it.text}</p>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div className="relative aspect-[4/3] overflow-hidden rounded-[var(--radius-card)] bg-surface lg:aspect-[5/4]">
+            {aboutImage && (
+              <Image
+                src={aboutImage}
+                alt="Интерьер с мебелью салона «Ромашка»"
+                fill
+                sizes="(max-width: 1024px) 100vw, 50vw"
+                className="object-cover"
+              />
+            )}
+          </div>
+        </div>
+      </Container>
+
       {/* История компании — структурированный таймлайн */}
       {timeline.length > 0 && (
         <section className="bg-surface">
@@ -189,6 +241,14 @@ export default async function HomePage() {
           </Container>
         </section>
       )}
+
+      {/* Доставка — заголовок слева, карусель абзацев справа (общий фон) */}
+      <Container className="py-20">
+        <div className="grid gap-10 lg:grid-cols-2 lg:gap-16">
+          <h2 className="text-3xl sm:text-4xl">Доставка</h2>
+          <DeliveryCarousel items={deliveryParagraphs} />
+        </div>
+      </Container>
 
       {/* Услуги и сервис */}
       <section className="bg-terracotta text-cream">
@@ -209,6 +269,58 @@ export default async function HomePage() {
           ))}
         </Container>
       </section>
+
+      {/* Как оплатить заказ */}
+      <Container className="pt-20 pb-10">
+        <SectionHeading title="Как оплатить заказ?" subtitle="Оплата оформляется в салоне после согласования заказа — без онлайн-оплаты" />
+        <div className="mt-10 grid gap-5 sm:grid-cols-2">
+          {[
+            {
+              Icon: CardIcon,
+              title: "Банковская карта",
+              text: "Оплата картой в салоне — за товары в наличии или в производстве (от 60 дней), после подписания договора.",
+            },
+            {
+              Icon: BankIcon,
+              title: "Безналичный расчёт (юрлица или физлица)",
+              text: "Оставьте контактные данные (телефон, e-mail, ФИО) — менеджер свяжется для подтверждения заказа.",
+            },
+          ].map(({ Icon, title, text }) => (
+            <div
+              key={title}
+              className="flex items-start gap-4 rounded-[var(--radius-card)] border border-line bg-surface p-6"
+            >
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-[var(--radius-card)] border border-line text-terracotta">
+                <Icon className="h-6 w-6" />
+              </span>
+              <div>
+                <h3 className="font-serif text-lg text-ink">{title}</h3>
+                <p className="mt-2 text-sm text-muted">{text}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+        <p className="mx-auto mt-8 max-w-3xl text-center text-sm text-muted">
+          Возникли вопросы по оплате? Свяжитесь с нами
+          {settings.phone && (
+            <>
+              {" "}по телефону{" "}
+              <a href={`tel:${settings.phone.replace(/[^+\d]/g, "")}`} className="text-ink underline underline-offset-2 hover:text-terracotta">
+                {settings.phone}
+              </a>
+            </>
+          )}
+          {settings.email && (
+            <>
+              {settings.phone ? " или напишите на" : " — напишите на"}{" "}
+              <a href={`mailto:${settings.email}`} className="text-ink underline underline-offset-2 hover:text-terracotta">
+                {settings.email}
+              </a>
+            </>
+          )}
+          . Поможем оформить заказ.
+        </p>
+      </Container>
     </>
   );
 }

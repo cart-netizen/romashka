@@ -64,7 +64,7 @@ export function ProductOptions({
 
       {materials && (
         <p className="font-serif text-base text-ink">
-          Материалы: <span className="font-sans text-muted">{materials}</span>
+          Материалы: <span className="text-muted">{materials}</span>
         </p>
       )}
 
