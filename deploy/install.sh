@@ -78,8 +78,14 @@ ensure_prereqs() {
 }
 
 # ── вспомогательные: правка .env ─────────────────────────────────────────────
-# get_env KEY  → значение; set_env KEY VALUE → создать/заменить (idempotent)
-get_env() { grep -E "^$1=" "$ENV_FILE" 2>/dev/null | head -1 | cut -d= -f2- || true; }
+# get_env KEY  → значение (с обрезкой обрамляющих пробелов)
+get_env() {
+  local v
+  v=$(grep -E "^$1=" "$ENV_FILE" 2>/dev/null | head -1 | cut -d= -f2- || true)
+  # срезаем ведущие/хвостовые пробелы (на случай кривого .env)
+  v="${v#"${v%%[![:space:]]*}"}"; v="${v%"${v##*[![:space:]]}"}"
+  printf '%s' "$v"
+}
 set_env() {
   local k="$1" v="$2"
   if grep -qE "^$k=" "$ENV_FILE" 2>/dev/null; then
@@ -90,8 +96,13 @@ set_env() {
     printf '%s=%s\n' "$k" "$v" >> "$ENV_FILE"
   fi
 }
-# заполнить KEY, только если пусто/отсутствует
-fill_if_empty() { local cur; cur=$(get_env "$1"); [ -z "$cur" ] && set_env "$1" "$2" || true; }
+# заполнить KEY, если пусто/отсутствует/выглядит как комментарий-заглушка
+fill_if_empty() {
+  local cur; cur=$(get_env "$1")
+  case "$cur" in
+    "" | "#"*) set_env "$1" "$2" ;;   # пусто или начинается с # → считаем незаданным
+  esac
+}
 
 # занят ли localhost-порт (учёт чужих docker-сайтов и любых слушателей)
 port_in_use() {
@@ -309,12 +320,21 @@ install_nginx() {
   log "Хостовый nginx перезагружен."
 
   if [ "$WITH_SSL" = 1 ]; then
-    command -v certbot >/dev/null || die "Нет certbot. Установите certbot + python3-certbot-nginx."
+    # certbot + nginx-плагин (без плагина '--nginx' не работает)
+    if ! command -v certbot >/dev/null; then
+      info "Ставлю certbot + nginx-плагин…"
+      $SUDO apt-get update -qq && $SUDO apt-get install -y -qq certbot python3-certbot-nginx \
+        || die "Не удалось установить certbot. Установите вручную: apt install certbot python3-certbot-nginx"
+    elif ! $SUDO certbot plugins 2>/dev/null | grep -q nginx; then
+      info "Доставляю nginx-плагин certbot…"
+      $SUDO apt-get update -qq && $SUDO apt-get install -y -qq python3-certbot-nginx \
+        || warn "Не удалось доставить python3-certbot-nginx — выпустите сертификат вручную после установки плагина."
+    fi
     info "Выпускаю SSL (Let's Encrypt) для доменов…"
     $SUDO certbot --nginx --non-interactive --agree-tos \
       -m "$(get_env ADMIN_EMAIL)" --redirect \
       -d "$site_dom" -d "www.$site_dom" -d "$cms_dom" \
-      || warn "certbot не смог выпустить сертификат — проверьте DNS (A-записи на этот сервер)."
+      || warn "certbot не смог выпустить сертификат — проверьте: (1) установлен ли nginx-плагин, (2) A-записи доменов резолвятся на этот сервер (dig +short $site_dom www.$site_dom $cms_dom)."
   fi
 }
 
