@@ -8,6 +8,9 @@ import { getCatalog, getCatalogFacets, getSubcategories, getSubcategoryBySlug } 
 import { parseCatalogParams, type RawParams } from "@/lib/catalog-params";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/seo";
 
+// Фильтры через searchParams — динамический рендер (иначе DYNAMIC_SERVER_USAGE).
+export const dynamic = "force-dynamic";
+
 export async function generateMetadata({
   params,
 }: {

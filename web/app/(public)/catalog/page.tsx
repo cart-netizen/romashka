@@ -4,6 +4,10 @@ import { CatalogView } from "@/components/catalog/CatalogView";
 import { getCatalog, getCatalogFacets } from "@/lib/directus";
 import { parseCatalogParams, type RawParams } from "@/lib/catalog-params";
 
+// Каталог фильтруется через searchParams — рендерим динамически (иначе Next 16
+// бросает DYNAMIC_SERVER_USAGE). Кэш данных работает на уровне fetch (revalidate).
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Каталог",
   description: "Премиальные диваны, кровати, кресла и тумбочки от фабрик-партнёров. Цена «от ___ ₽».",

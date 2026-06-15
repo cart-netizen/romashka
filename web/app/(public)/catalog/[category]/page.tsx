@@ -3,14 +3,13 @@ import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/ui/PageHeader";
 import { SubcategoryChips } from "@/components/catalog/SubcategoryChips";
 import { CatalogView } from "@/components/catalog/CatalogView";
-import { assetUrl, getCatalog, getCategories, getCategoryBySlug, getCatalogFacets, getSubcategories } from "@/lib/directus";
+import { assetUrl, getCatalog, getCategoryBySlug, getCatalogFacets, getSubcategories } from "@/lib/directus";
 import { parseCatalogParams, type RawParams } from "@/lib/catalog-params";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/seo";
 
-export async function generateStaticParams() {
-  const categories = await getCategories();
-  return categories.map((c) => ({ category: c.slug }));
-}
+// Каталог категории фильтруется через searchParams — рендерим динамически
+// (generateStaticParams + searchParams в Next 16 даёт DYNAMIC_SERVER_USAGE).
+export const dynamic = "force-dynamic";
 
 export async function generateMetadata({
   params,
