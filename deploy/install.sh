@@ -144,6 +144,9 @@ prepare_env() {
   fi
   [ -n "$cms_dom" ] && set_env DIRECTUS_PUBLIC_URL "https://$cms_dom"
   [ -n "$admin_mail" ] && set_env ADMIN_EMAIL "$admin_mail"
+  # Конкретный IP для bind nginx (если сосед-панель держит listen <IP>:80/443) —
+  # сохраняем, чтобы не передавать HOST_IP при каждом запуске.
+  [ -n "${HOST_IP:-}" ] && set_env HOST_IP "$HOST_IP"
 
   # секреты — генерируем, только если пустые
   fill_if_empty DB_PASSWORD          "$(openssl rand -hex 24)"
