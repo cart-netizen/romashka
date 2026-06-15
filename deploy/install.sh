@@ -200,6 +200,20 @@ bootstrap_directus() {
   dc exec -T directus npx directus schema apply --yes /directus/snapshot/snapshot.yaml \
     || warn "schema apply вернул ошибку (возможно, уже применена)."
 
+  # Самолечение креды: Directus применяет ADMIN_* из env только при ПЕРВОМ старте
+  # на пустой БД. Если том БД остался от прежнего/упавшего запуска с другим
+  # паролем — синхронизируем пароль администратора с текущим .env, иначе
+  # bootstrap-логин ниже упадёт «Invalid user credentials».
+  local am ap
+  am=$(get_env ADMIN_EMAIL); ap=$(get_env ADMIN_PASSWORD)
+  if [ -n "$am" ] && [ -n "$ap" ]; then
+    if dc exec -T directus npx directus users passwd --email "$am" --password "$ap" </dev/null >/dev/null 2>&1; then
+      log "Пароль администратора синхронизирован с .env."
+    else
+      warn "Синхронизация пароля админа пропущена (свежая БД или старый CLI — обычно это норм)."
+    fi
+  fi
+
   info "Настраиваю роли/политики/пресеты (access, presets)…"
   local net="${PROJECT_NAME}_default"
   local steps="node scripts/access.mjs && node scripts/presets.mjs"
@@ -211,7 +225,10 @@ bootstrap_directus() {
     -v "$PROJECT_ROOT/cms":/cms -w /cms \
     node:22-alpine sh -c \
     "npm install --no-audit --no-fund --silent >/dev/null 2>&1 || true; $steps" \
-    || die "Ошибка bootstrap (access/presets/seed). Проверьте ADMIN_EMAIL/PASSWORD."
+    || die "Ошибка bootstrap. Если выше 'Invalid user credentials' — БД осталась от прежнего запуска с другим паролем.
+       Очистите БД ТОЛЬКО нашего стека и переустановите (чужие сайты не затрагиваются):
+         docker compose -p $PROJECT_NAME -f $COMPOSE_FILE --env-file .env down -v
+         sudo bash $0 <те же флаги>"
   if [ "$WITH_SEED" = 1 ]; then log "Directus инициализирован (с демо-контентом)."; else log "Directus инициализирован."; fi
 }
 
