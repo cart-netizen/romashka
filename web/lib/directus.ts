@@ -305,6 +305,9 @@ export async function getCatalog(q: CatalogQuery): Promise<{ items: Product[]; t
   if (q.category) and.push({ category: { slug: { _eq: q.category } } });
   if (q.subcategory) and.push({ subcategory: { slug: { _eq: q.subcategory } } });
   if (q.inStock) and.push({ in_stock: { _eq: true } });
+  if (q.badge === "new") and.push({ is_new: { _eq: true } });
+  else if (q.badge === "hit") and.push({ is_bestseller: { _eq: true } });
+  else if (q.badge === "sale") and.push({ is_sale: { _eq: true } });
   if (q.factories.length) and.push({ factory: { slug: { _in: q.factories } } });
   if (q.frame.length) and.push({ frame: { _in: q.frame } });
   if (q.upholstery.length) and.push({ _or: q.upholstery.map((v) => ({ upholstery: { _contains: v } })) });

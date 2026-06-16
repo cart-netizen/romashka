@@ -11,9 +11,17 @@ export const SORT_OPTIONS: { value: SortKey; label: string }[] = [
 
 export const PAGE_SIZE = 12;
 
+export type BadgeKey = "new" | "hit" | "sale";
+export const BADGE_LABELS: Record<BadgeKey, string> = {
+  new: "Новинки",
+  hit: "Хиты коллекции",
+  sale: "Распродажа",
+};
+
 export interface CatalogQuery {
   q?: string;
   inStock: boolean;
+  badge?: BadgeKey; // плитки mega-menu: Новинки/Хиты/Распродажа
   factories: string[]; // slugs
   category?: string; // slug (на /catalog)
   subcategory?: string; // slug (на странице категории)
@@ -51,9 +59,12 @@ function num(v: string | string[] | undefined): number | undefined {
 export function parseCatalogParams(params: RawParams): CatalogQuery {
   const sort = (first(params.sort) ?? "default") as SortKey;
   const page = Math.max(1, num(params.page) ?? 1);
+  const badgeRaw = first(params.badge);
+  const badge = badgeRaw && badgeRaw in BADGE_LABELS ? (badgeRaw as BadgeKey) : undefined;
   return {
     q: first(params.q)?.trim() || undefined,
     inStock: first(params.in_stock) === "1",
+    badge,
     factories: list(params.factory),
     category: first(params.category),
     subcategory: first(params.subcategory),
@@ -78,6 +89,7 @@ export function buildCatalogParams(q: Partial<CatalogQuery>): URLSearchParams {
   const sp = new URLSearchParams();
   if (q.q) sp.set("q", q.q);
   if (q.inStock) sp.set("in_stock", "1");
+  if (q.badge) sp.set("badge", q.badge);
   if (q.factories?.length) sp.set("factory", q.factories.join(","));
   if (q.category) sp.set("category", q.category);
   if (q.subcategory) sp.set("subcategory", q.subcategory);

@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/ui/PageHeader";
 import { SubcategoryChips } from "@/components/catalog/SubcategoryChips";
 import { CatalogView } from "@/components/catalog/CatalogView";
 import { assetUrl, getCatalog, getCategoryBySlug, getCatalogFacets, getSubcategories } from "@/lib/directus";
-import { parseCatalogParams, type RawParams } from "@/lib/catalog-params";
+import { BADGE_LABELS, parseCatalogParams, type RawParams } from "@/lib/catalog-params";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/seo";
 
 // Каталог категории фильтруется через searchParams — рендерим динамически
@@ -60,7 +60,7 @@ export default async function CategoryPage({
       />
       <PageHeader
         crumbs={[{ label: "Главная", href: "/" }, { label: "Каталог", href: "/catalog" }, { label: cat.name }]}
-        title={cat.name}
+        title={uiQuery.badge ? `${cat.name} — ${BADGE_LABELS[uiQuery.badge]}` : cat.name}
         description={cat.description}
       >
         <SubcategoryChips categorySlug={category} subcategories={subcategories} />
