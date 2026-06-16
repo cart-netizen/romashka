@@ -17,7 +17,8 @@ export async function Header() {
       .map((p) => ({
         id: p.id,
         title: p.title,
-        link: p.link || `/catalog/${c.slug}`,
+        // приоритет: явная ссылка → авто-ссылка по бейджу → страница категории
+        link: p.link || (p.badge ? `/catalog/${c.slug}?badge=${p.badge}` : `/catalog/${c.slug}`),
         image: assetUrl(p.image, { width: 480, height: 320, fit: "cover" }),
       })),
   }));

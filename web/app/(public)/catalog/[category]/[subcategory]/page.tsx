@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { PageHeader } from "@/components/ui/PageHeader";
+import { CatalogHero } from "@/components/catalog/CatalogHero";
 import { SubcategoryChips } from "@/components/catalog/SubcategoryChips";
 import { CatalogView } from "@/components/catalog/CatalogView";
 import type { Category } from "@/lib/directus.types";
-import { getCatalog, getCatalogFacets, getSubcategories, getSubcategoryBySlug } from "@/lib/directus";
+import { assetUrl, getCatalog, getCatalogFacets, getSubcategories, getSubcategoryBySlug } from "@/lib/directus";
 import { parseCatalogParams, type RawParams } from "@/lib/catalog-params";
 import { JsonLd, breadcrumbJsonLd } from "@/lib/seo";
 
@@ -53,7 +53,7 @@ export default async function SubcategoryPage({
           { name: sub.name, url: `/catalog/${category}/${subcategory}` },
         ])}
       />
-      <PageHeader
+      <CatalogHero
         crumbs={[
           { label: "Главная", href: "/" },
           { label: "Каталог", href: "/catalog" },
@@ -61,9 +61,10 @@ export default async function SubcategoryPage({
           { label: sub.name },
         ]}
         title={sub.name}
+        image={assetUrl(parent?.hero_image, { width: 1920, height: 560, fit: "cover" })}
       >
         <SubcategoryChips categorySlug={category} subcategories={subcategories} activeSlug={subcategory} />
-      </PageHeader>
+      </CatalogHero>
       <CatalogView
         basePath={`/catalog/${category}/${subcategory}`}
         query={uiQuery}

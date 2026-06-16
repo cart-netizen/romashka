@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { PageHeader } from "@/components/ui/PageHeader";
+import { CatalogHero } from "@/components/catalog/CatalogHero";
 import { SubcategoryChips } from "@/components/catalog/SubcategoryChips";
 import { CatalogView } from "@/components/catalog/CatalogView";
 import { assetUrl, getCatalog, getCategoryBySlug, getCatalogFacets, getSubcategories } from "@/lib/directus";
@@ -58,13 +58,14 @@ export default async function CategoryPage({
           { name: cat.name, url: `/catalog/${category}` },
         ])}
       />
-      <PageHeader
+      <CatalogHero
         crumbs={[{ label: "Главная", href: "/" }, { label: "Каталог", href: "/catalog" }, { label: cat.name }]}
         title={uiQuery.badge ? `${cat.name} — ${BADGE_LABELS[uiQuery.badge]}` : cat.name}
         description={cat.description}
+        image={assetUrl(cat.hero_image, { width: 1920, height: 560, fit: "cover" })}
       >
         <SubcategoryChips categorySlug={category} subcategories={subcategories} />
-      </PageHeader>
+      </CatalogHero>
       <CatalogView basePath={`/catalog/${category}`} query={uiQuery} facets={facets} items={items} total={total} />
     </>
   );

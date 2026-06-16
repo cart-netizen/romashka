@@ -36,6 +36,7 @@ export interface MenuPromo {
   id: number;
   title: string;
   image: string | null;
+  badge: "new" | "hit" | "sale" | null;
   link: string | null;
   sort: number | null;
   category: number | Category;

@@ -240,9 +240,10 @@ bootstrap_directus() {
     fi
   fi
 
-  info "Настраиваю роли/политики/пресеты (access, presets)…"
+  info "Применяю схему (поля) + роли/политики/пресеты…"
   local net="${PROJECT_NAME}_default"
-  local steps="node scripts/access.mjs && node scripts/presets.mjs"
+  # schema.mjs идемпотентно дочиняет поля, которых нет в snapshot (источник правды — код)
+  local steps="node scripts/schema.mjs && node scripts/access.mjs && node scripts/presets.mjs"
   [ "$WITH_SEED" = 1 ] && steps="$steps && node scripts/seed.mjs"
   docker run --rm --network "$net" \
     -e DIRECTUS_URL="http://directus:8055" \

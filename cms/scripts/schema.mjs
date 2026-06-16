@@ -123,6 +123,13 @@ async function main() {
   await ensureM2O("menu_promos", "category", "categories", { onDelete: "CASCADE", required: true });
   await ensureField("menu_promos", "title", string({ required: true }));
   await ensureFile("menu_promos", "image");
+  // Бейдж: авто-ссылка плитки на отфильтрованный каталог категории.
+  await ensureField(
+    "menu_promos",
+    "badge",
+    dropdown([ch("new", "Новинки"), ch("hit", "Хиты коллекции"), ch("sale", "Распродажа")]),
+  );
+  // Ссылка — опционально, переопределяет авто-ссылку по бейджу.
   await ensureField("menu_promos", "link", string());
   await ensureField("menu_promos", "sort", integer());
   await ensureField("menu_promos", "status", status());

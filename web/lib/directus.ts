@@ -193,7 +193,7 @@ export async function getMenuPromos(): Promise<MenuPromo[]> {
   return dGet<MenuPromo[]>(
     "/items/menu_promos",
     {
-      fields: "id,title,image,link,sort,category",
+      fields: "id,title,image,badge,link,sort,category",
       filter: PUBLISHED,
       sort: "sort",
       limit: -1,
@@ -245,7 +245,7 @@ export async function getSubcategoryBySlug(
   subcategorySlug: string,
 ): Promise<Subcategory | null> {
   const rows = await dGet<Subcategory[]>("/items/subcategories", {
-    fields: "id,name,slug,category.id,category.name,category.slug",
+    fields: "id,name,slug,category.id,category.name,category.slug,category.hero_image,category.description",
     filter: {
       ...PUBLISHED,
       slug: { _eq: subcategorySlug },
