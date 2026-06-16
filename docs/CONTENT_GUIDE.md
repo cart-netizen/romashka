@@ -34,7 +34,27 @@
 - Карта (map_embed) — вставьте код `<iframe>` Яндекс/Google Карт или URL.
 - Дисклеймер размеров, дефолтный срок изготовления.
 - Сумма промокода (5000), префикс промокода (например `ROMASHKA`).
-- SEO: заголовок/описание по умолчанию, тексты hero.
+- SEO: заголовок/описание по умолчанию.
+- **Hero главной:** `hero_title`, `hero_subtitle`, **`hero_video`** — видео для hero
+  (на десктопе; на мобильных всегда показывается фото категории).
+- **`about_image`** — фото для блока «О нас» на главной.
+- **История компании (таймлайн):** **`timeline_title`** — заголовок блока (по
+  умолчанию «История компании») и **`timeline`** — повторитель: добавляйте строки
+  с полями **Год**, **Заголовок**, **Описание**. Блок «История компании» на главной
+  появляется, **только когда в `timeline` есть хотя бы одна строка** — пока поле
+  пустое, его на сайте нет. (Если поля `timeline` нет в Site Settings — значит схема
+  не применена; см. примечание ниже.)
+
+> Примечание (тех.): если каких-то полей в Site Settings не видно (`timeline`,
+> `about_image`, `badge` у Menu Promos) — на сервере выполните идемпотентное
+> применение схемы:
+> ```bash
+> cd /opt/romashka/deploy && docker run --rm --network romashka_default \
+>   -e DIRECTUS_URL=http://directus:8055 \
+>   -e ADMIN_EMAIL="$(grep -E '^ADMIN_EMAIL=' .env|cut -d= -f2-)" \
+>   -e ADMIN_PASSWORD="$(grep -E '^ADMIN_PASSWORD=' .env|cut -d= -f2-)" \
+>   -v /opt/romashka/cms:/cms -w /cms node:22-alpine node scripts/schema.mjs
+> ```
 
 ## 2. Категории (Categories)
 
