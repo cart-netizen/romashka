@@ -14,6 +14,7 @@ import {
   TruckIcon,
 } from "@/components/ui/icons";
 import { ProductGrid } from "@/components/catalog/ProductGrid";
+import { BestsellerStrip } from "@/components/catalog/BestsellerStrip";
 import { InteractiveScene, type SceneData } from "@/components/home/InteractiveScene";
 import { HeroVideo } from "@/components/home/HeroVideo";
 import { Timeline } from "@/components/home/Timeline";
@@ -151,6 +152,25 @@ export default async function HomePage() {
         </section>
       )}
 
+      {/* Ещё больше причин влюбиться — бестселлеры (по референсу) */}
+      {hits.length > 0 && (
+        <Container className="py-20">
+          <div className="flex flex-col items-center gap-6 text-center">
+            <h2 className="text-3xl sm:text-4xl">Ещё больше причин влюбиться</h2>
+            <Link
+              href="/catalog?badge=hit"
+              className="inline-flex h-[50px] items-center justify-center rounded-[10px] border border-ink px-7 font-serif text-base font-medium text-ink transition-colors hover:bg-burgundy hover:text-cream sm:text-lg"
+            >
+              Выбрать бестселлеры
+            </Link>
+          </div>
+          <div className="mt-12">
+            <BestsellerStrip products={hits} />
+          </div>
+          <div className="mx-auto mt-10 h-0.5 w-40 rounded bg-terracotta/50" />
+        </Container>
+      )}
+
       {/* Бордовый акцент-баннер */}
       <section className="bg-burgundy">
         <Container className="flex flex-col items-center gap-5 py-16 text-center text-cream">
@@ -161,19 +181,6 @@ export default async function HomePage() {
           </ButtonLink>
         </Container>
       </section>
-
-      {/* Хиты коллекции */}
-      <Container className="py-20">
-        <SectionHeading title="Хиты коллекции" subtitle="Избранные модели нашего каталога" />
-        <div className="mt-10">
-          <ProductGrid products={hits} />
-        </div>
-        <div className="mt-10 text-center">
-          <ButtonLink href="/catalog" variant="outline">
-            Весь каталог
-          </ButtonLink>
-        </div>
-      </Container>
 
       {/* Новинки */}
       {newest.length > 0 && (
