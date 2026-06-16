@@ -1,9 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
+import { createPortal } from "react-dom";
 import { ChevronRightIcon, CloseIcon } from "@/components/ui/icons";
 
-/** Просмотр фото по центру экрана с затемнением. Закрытие — клик по фону / Esc. */
+/** Просмотр фото по центру экрана с затемнением. Закрытие — клик по фону / Esc.
+ *  Рендерится порталом в body — чтобы быть поверх любого stacking-context
+ *  (липкая галерея, аккордеоны и т.п.). */
 export function Lightbox({
   images,
   index,
@@ -35,9 +38,9 @@ export function Lightbox({
   }, [onClose, onPrev, onNext, multiple]);
 
   const src = images[index];
-  if (!src) return null;
+  if (!src || typeof document === "undefined") return null;
 
-  return (
+  return createPortal(
     <div
       className="fixed inset-0 z-[120] flex items-center justify-center bg-ink/85 p-4 backdrop-blur-sm sm:p-8"
       role="dialog"
@@ -95,6 +98,7 @@ export function Lightbox({
           {index + 1} / {images.length}
         </span>
       )}
-    </div>
+    </div>,
+    document.body,
   );
 }
