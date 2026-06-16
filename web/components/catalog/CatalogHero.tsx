@@ -34,7 +34,7 @@ export function CatalogHero({
         <Container className="relative flex h-full flex-col items-center justify-center text-center">
           <h1 className="text-3xl text-cream sm:text-4xl">{title}</h1>
           {description && (
-            <p className="mt-4 line-clamp-3 max-w-2xl text-sm leading-relaxed text-cream/85 sm:text-base">
+            <p className="mt-4 line-clamp-3 max-w-2xl text-sm font-semibold leading-relaxed text-cream/85 sm:text-base">
               {description}
             </p>
           )}

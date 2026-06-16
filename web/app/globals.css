@@ -37,14 +37,18 @@ body {
   line-height: 1.6;
 }
 
-/* Заголовки — серифом по умолчанию */
-h1,
-h2,
-h3 {
-  font-family: var(--font-serif);
-  font-weight: 500;
-  letter-spacing: -0.01em;
-  color: var(--color-ink);
+/* Заголовки — серифом по умолчанию. В @layer base, чтобы утилиты Tailwind
+   (text-cream, font-bold и т.п.) могли переопределять цвет/вес на конкретных
+   заголовках — иначе безлойерное правило перебивает классы. */
+@layer base {
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-serif);
+    font-weight: 500;
+    letter-spacing: -0.01em;
+    color: var(--color-ink);
+  }
 }
 
 /* Плавная прокрутка к якорям (отзывы и т.п.) */
