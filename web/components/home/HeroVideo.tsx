@@ -23,7 +23,7 @@ export function HeroVideo({ src, poster }: { src: string; poster?: string }) {
   if (!isDesktop) return null;
   return (
     <video
-      className="absolute inset-0 h-full w-full object-cover"
+      className="absolute inset-0 h-full w-full object-cover object-center"
       autoPlay
       muted
       loop

@@ -73,8 +73,8 @@ export default async function HomePage() {
 
   return (
     <>
-      {/* Hero */}
-      <section className="relative flex min-h-[68vh] items-center overflow-hidden">
+      {/* Hero — фиксированная высота, фото/видео заполняют по ширине с обрезкой сверху/снизу */}
+      <section className="relative flex h-[clamp(460px,70vh,760px)] items-center overflow-hidden">
         {/* Базовый слой — изображение (на мобильных всегда оно) */}
         {heroImage && <Image src={heroImage} alt="" fill priority sizes="100vw" className="object-cover" />}
         {/* Видео — только на десктопе (на мобильных не загружается) */}
