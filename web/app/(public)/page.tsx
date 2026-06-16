@@ -5,7 +5,6 @@ import { Container } from "@/components/ui/Container";
 import { ButtonLink } from "@/components/ui/Button";
 import { SectionHeading } from "@/components/ui/SectionHeading";
 import {
-  ArrowRightIcon,
   BankIcon,
   CardIcon,
   ShieldIcon,
@@ -97,29 +96,46 @@ export default async function HomePage() {
         </Container>
       </section>
 
-      {/* Категории */}
+      {/* Категории — как на референсе: слева текст + кнопка, справа карточки-слайдер */}
       <Container className="py-20">
-        <SectionHeading title="Категории" subtitle="Подберите мебель под свой интерьер" />
-        <div className="mt-10 grid grid-cols-2 gap-5 lg:grid-cols-4">
-          {categories.map((c) => {
-            const img = assetUrl(c.hero_image, { width: 600, height: 700, fit: "cover" });
-            return (
-              <Link
-                key={c.id}
-                href={`/catalog/${c.slug}`}
-                className="group relative flex aspect-[4/5] flex-col justify-end overflow-hidden rounded-[var(--radius-card)] bg-ink/5"
-              >
-                {img && (
-                  <Image src={img} alt={c.name} fill sizes="(max-width: 1024px) 50vw, 25vw" className="object-cover transition-transform duration-500 group-hover:scale-105" />
-                )}
-                <div className="absolute inset-0 bg-gradient-to-t from-ink/70 to-transparent" />
-                <span className="relative z-10 flex items-center justify-between p-5 font-serif text-xl text-cream">
-                  {c.name}
-                  <ArrowRightIcon className="h-5 w-5 transition-transform group-hover:translate-x-1" />
-                </span>
-              </Link>
-            );
-          })}
+        <div className="grid items-center gap-10 lg:grid-cols-[0.9fr_1.3fr] lg:gap-14">
+          {/* Левая часть — текст и кнопка */}
+          <div className="max-w-md">
+            <p className="font-serif text-lg leading-relaxed text-ink sm:text-xl">
+              Дом — это сердце каждой встречи. Создавайте пространство для смеха, трапез и воспоминаний,
+              используя мебель, которая делает встречи непринуждёнными.
+            </p>
+            <Link
+              href="/catalog"
+              className="mt-8 inline-flex h-[50px] items-center justify-center rounded-[10px] border border-ink px-7 font-serif text-base font-medium text-ink transition-colors hover:bg-burgundy hover:text-cream sm:text-lg"
+            >
+              Выбрать мебель
+            </Link>
+          </div>
+
+          {/* Правая часть — горизонтальный слайдер карточек-категорий */}
+          <div className="-mx-4 min-w-0 overflow-x-auto px-4 pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden lg:mx-0 lg:px-0">
+            <div className="flex snap-x gap-5">
+              {categories.map((c) => {
+                const img = assetUrl(c.hero_image, { width: 720, height: 960, fit: "cover" });
+                return (
+                  <Link
+                    key={c.id}
+                    href={`/catalog/${c.slug}`}
+                    className="group relative block aspect-[3/4] w-[74vw] max-w-[360px] shrink-0 snap-start overflow-hidden rounded-[var(--radius-card)] bg-ink/5 sm:w-[360px]"
+                  >
+                    {img && (
+                      <Image src={img} alt={c.name} fill sizes="360px" className="object-cover transition-transform duration-500 group-hover:scale-105" />
+                    )}
+                    <span className="absolute inset-0 bg-gradient-to-t from-ink/30 to-transparent" />
+                    <span className="absolute bottom-5 left-5 rounded-[10px] bg-cream px-5 py-2.5 font-serif text-sm font-medium text-ink shadow-sm transition-colors group-hover:bg-terracotta group-hover:text-cream">
+                      {c.name}
+                    </span>
+                  </Link>
+                );
+              })}
+            </div>
+          </div>
         </div>
       </Container>
 
