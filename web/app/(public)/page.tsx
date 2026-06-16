@@ -154,21 +154,23 @@ export default async function HomePage() {
 
       {/* Ещё больше причин влюбиться — бестселлеры (по референсу) */}
       {hits.length > 0 && (
-        <Container className="py-20">
-          <div className="flex flex-col items-center gap-6 text-center">
-            <h2 className="text-3xl sm:text-4xl">Ещё больше причин влюбиться</h2>
-            <Link
-              href="/catalog?badge=hit"
-              className="inline-flex h-[50px] items-center justify-center rounded-[10px] border border-ink px-7 font-serif text-base font-medium text-ink transition-colors hover:bg-burgundy hover:text-cream sm:text-lg"
-            >
-              Выбрать бестселлеры
-            </Link>
-          </div>
-          <div className="mt-12">
-            <BestsellerStrip products={hits} />
-          </div>
-          <div className="mx-auto mt-10 h-0.5 w-40 rounded bg-terracotta/50" />
-        </Container>
+        <section className="bg-surface">
+          <Container className="py-20">
+            <div className="flex flex-col items-center gap-6 text-center">
+              <h2 className="text-3xl sm:text-4xl">Ещё больше причин влюбиться</h2>
+              <Link
+                href="/catalog?badge=hit"
+                className="inline-flex h-[50px] items-center justify-center rounded-[10px] border border-ink px-7 font-serif text-base font-medium text-ink transition-colors hover:bg-burgundy hover:text-cream sm:text-lg"
+              >
+                Выбрать бестселлеры
+              </Link>
+            </div>
+            <div className="mt-12">
+              <BestsellerStrip products={hits} />
+            </div>
+            <div className="mx-auto mt-10 h-0.5 w-40 rounded bg-terracotta/50" />
+          </Container>
+        </section>
       )}
 
       {/* Бордовый акцент-баннер */}
